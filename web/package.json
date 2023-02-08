@@ -23,6 +23,7 @@
     "@vercel/analytics": "^0.1.5",
     "eslint": "8.28.0",
     "eslint-config-next": "13.0.5",
+    "generate-api-key": "^1.0.2",
     "next": "13.0.5",
     "react": "18.2.0",
     "react-csv": "2.2.2",

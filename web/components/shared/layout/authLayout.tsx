@@ -32,6 +32,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react";
 import { DEMO_EMAIL } from "../../../lib/constants";
+import { WrenchIcon } from "@heroicons/react/24/solid";
 
 export default function AuthLayout(props: { children: React.ReactNode }) {
   const { children } = props;
@@ -73,11 +74,18 @@ export default function AuthLayout(props: { children: React.ReactNode }) {
       icon: WrenchScrewdriverIcon,
       current: pathname === "/usage",
     },
+
     {
-      name: "Keys",
+      name: "OpenAI Keys",
       href: "/keys",
       icon: KeyIcon,
       current: pathname === "/keys",
+    },
+    {
+      name: "Helicone Settings",
+      href: "/helicone_keys",
+      icon: WrenchIcon,
+      current: pathname === "/helicone_keys",
     },
   ];
 

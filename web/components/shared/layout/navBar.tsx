@@ -48,7 +48,7 @@ const NavBar = (props: NavBarProps) => {
       current: pathname === "/usage",
     },
     {
-      name: "Keys",
+      name: "OpenAI Keys",
       path: "/keys",
       active: pathname === "/keys",
     },

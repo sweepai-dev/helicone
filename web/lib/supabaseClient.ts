@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { Database } from "../supabase/database.types";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
@@ -24,12 +25,7 @@ export async function hashAuth(key: string): Promise<string> {
   return hexCodes.join("");
 }
 
-export const supabaseClientAuthHash = async (authhash: string) =>
-  createClient(supabaseUrl, supabaseAnonKey, {
-    auth: { autoRefreshToken: true },
-    global: {
-      headers: {
-        authhash,
-      },
-    },
-  });
+export const supabaseClient = createClient<Database>(
+  supabaseUrl,
+  supabaseAnonKey
+);
