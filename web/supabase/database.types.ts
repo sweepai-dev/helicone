@@ -1,262 +1,31 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json }
-  | Json[]
+import { Database as GenDB, Json } from "./generated.database.types";
 
-export interface Database {
+interface MaterializedViews {
   public: {
     Tables: {
-      cache_hits: {
+      materialized_response_and_request: {
         Row: {
-          created_at: string
-          request_id: string
-        }
-        Insert: {
-          created_at?: string
-          request_id: string
-        }
-        Update: {
-          created_at?: string
-          request_id?: string
-        }
-      }
-      prompt: {
-        Row: {
-          created_at: string | null
-          prompt: string
-          name: string
-          id: string
-          auth_hash: string
-        }
-        Insert: {
-          created_at?: string | null
-          prompt: string
-          name: string
-          id: string
-          auth_hash: string
-        }
-        Update: {
-          created_at?: string | null
-          prompt?: string
-          name?: string
-          id?: string
-          auth_hash?: string
-        }
-      }
-      request: {
-        Row: {
-          id: string
-          created_at: string
-          body: Json
-          path: string
-          auth_hash: string
-          user_id: string | null
-          prompt_id: string | null
-          properties: Json | null
-          formatted_prompt_id: string | null
-          prompt_values: Json | null
-        }
-        Insert: {
-          id?: string
-          created_at?: string
-          body: Json
-          path: string
-          auth_hash: string
-          user_id?: string | null
-          prompt_id?: string | null
-          properties?: Json | null
-          formatted_prompt_id?: string | null
-          prompt_values?: Json | null
-        }
-        Update: {
-          id?: string
-          created_at?: string
-          body?: Json
-          path?: string
-          auth_hash?: string
-          user_id?: string | null
-          prompt_id?: string | null
-          properties?: Json | null
-          formatted_prompt_id?: string | null
-          prompt_values?: Json | null
-        }
-      }
-      response: {
-        Row: {
-          id: string
-          created_at: string
-          body: Json
-          request: string
-        }
-        Insert: {
-          id?: string
-          created_at?: string
-          body: Json
-          request: string
-        }
-        Update: {
-          id?: string
-          created_at?: string
-          body?: Json
-          request?: string
-        }
-      }
-      user_api_keys: {
-        Row: {
-          created_at: string
-          api_key_hash: string
-          api_key_preview: string
-          user_id: string
-          key_name: string | null
-        }
-        Insert: {
-          created_at?: string
-          api_key_hash: string
-          api_key_preview: string
-          user_id: string
-          key_name?: string | null
-        }
-        Update: {
-          created_at?: string
-          api_key_hash?: string
-          api_key_preview?: string
-          user_id?: string
-          key_name?: string | null
-        }
-      }
-      user_settings: {
-        Row: {
-          user: string
-          created_at: string | null
-          request_limit: number
-          tier: string
-        }
-        Insert: {
-          user: string
-          created_at?: string | null
-          request_limit?: number
-          tier?: string
-        }
-        Update: {
-          user?: string
-          created_at?: string | null
-          request_limit?: number
-          tier?: string
-        }
-      }
-    }
-    Views: {
-      metrics_rbac: {
-        Row: {
-          average_response_time: number | null
-          average_tokens_per_response: number | null
-        }
-      }
-      model_metrics: {
-        Row: {
-          model: string | null
-          sum_tokens: number | null
-          sum_prompt_tokens: number | null
-          sum_completion_tokens: number | null
-          request_count: number | null
-        }
-      }
-      request_cache_rbac: {
-        Row: {
-          id: string | null
-          created_at: string | null
-          body: Json | null
-          path: string | null
-          auth_hash: string | null
-          user_id: string | null
-          prompt_id: string | null
-          properties: Json | null
-          formatted_prompt_id: string | null
-          prompt_values: Json | null
-          cached_created_at: string | null
-        }
-      }
-      request_rbac: {
-        Row: {
-          id: string | null
-          created_at: string | null
-          body: Json | null
-          path: string | null
-          auth_hash: string | null
-          user_id: string | null
-          properties: Json | null
-          cached_created_at: string | null
-        }
-      }
-      response_and_request_rbac: {
-        Row: {
-          response_body: Json | null
-          response_id: string | null
-          response_created_at: string | null
-          request_id: string | null
-          request_body: Json | null
-          request_path: string | null
-          request_created_at: string | null
-          request_user_id: string | null
-          api_key_preview: string | null
-          user_id: string | null
-          request_properties: Json | null
-          formatted_prompt_id: string | null
-          prompt_values: Json | null
-          prompt_name: string | null
-          prompt_regex: string | null
-          is_cached: boolean | null
-        }
-      }
-      response_rbac: {
-        Row: {
-          id: string | null
-          created_at: string | null
-          body: Json | null
-          request: string | null
-        }
-      }
-      user_metrics_rbac: {
-        Row: {
-          user_id: string | null
-          first_active: string | null
-          last_active: string | null
-          total_requests: number | null
-          average_requests_per_day_active: number | null
-          average_tokens_per_request: number | null
-        }
-      }
-    }
-    Functions: {
-      check_request_access: {
-        Args: { this_auth_hash: string; this_user_id: string }
-        Returns: boolean
-      }
-      check_response_access:
-        | {
-            Args: { this_associated_request_id: string }
-            Returns: boolean
-          }
-        | {
-            Args: { this_associated_request_id: string; this_user_id: string }
-            Returns: boolean
-          }
-      date_count:
-        | {
-            Args: { time_increment: string; prev_period: string }
-            Returns: Record<string, unknown>[]
-          }
-        | {
-            Args: { time_increment: string }
-            Returns: Record<string, unknown>[]
-          }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-  }
+          response_body: Json;
+          response_id: string;
+          response_created_at: string;
+          request_id: string;
+          request_body: Json;
+          request_path: string;
+          request_created_at: string;
+          request_user_id: string | null;
+          api_key_preview: string;
+          user_id: string;
+          request_properties: Json | null;
+          formatted_prompt_id: string | null;
+          prompt_values: Json | null;
+          prompt_name: string | null;
+          prompt_regex: string | null;
+          is_cached: boolean;
+          user_api_key_hash: string;
+        };
+      };
+    };
+  };
 }
 
+export type Database = GenDB & MaterializedViews;

@@ -42,6 +42,7 @@ function calculateAverageRequestsPerDay(
 
 async function getData(authClient: AuthClient, options: GetMetricsOptions) {
   const { client, user } = authClient;
+  // return { data: null, error: "hello" };
   try {
     const results = await Promise.all([
       unwrapAsync(getModelMetrics(options.filter, user.id, false)),

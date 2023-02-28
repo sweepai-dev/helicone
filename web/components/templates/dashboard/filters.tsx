@@ -40,10 +40,10 @@ export function Filters({
 
             if (f === "all") {
               return {
-                user_api_keys: {
-                  api_key_hash: {
+                materialized_response_and_request: {
+                  user_api_key_hash: {
                     equals: {
-                      api_key_hash: [e.target.value],
+                      user_api_key_hash: [e.target.value],
                     },
                   },
                 },
@@ -54,10 +54,10 @@ export function Filters({
             }
             return {
               ...f,
-              user_api_keys: {
-                api_key_hash: {
+              materialized_response_and_request: {
+                user_api_key_hash: {
                   equals: {
-                    api_key_hash: [e.target.value],
+                    user_api_key_hash: [e.target.value],
                   },
                 },
               },

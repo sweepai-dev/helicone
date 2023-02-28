@@ -12,15 +12,13 @@ export async function getXRequestDate(
 ): Promise<Result<Date, string>> {
   const query = `
 SELECT 
-  request.created_at
- FROM request
-   LEFT JOIN response ON response.request = request.id
-   LEFT JOIN user_api_keys ON user_api_keys.api_key_hash = request.auth_hash
+  request_created_at
+ FROM materialized_response_and_request
 WHERE (
-  user_api_keys.user_id = '${user_id}'
+  user_api_key_user_id = '${user_id}'
   AND (${buildFilter(filter)})
 )
-ORDER BY response.created_at ${first ? "ASC" : "DESC"}
+ORDER BY response_created_at ${first ? "ASC" : "DESC"}
 LIMIT 1
 `;
   const { data, error } = await dbExecute<CreatedAt>(query);

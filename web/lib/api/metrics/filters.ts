@@ -1,4 +1,16 @@
 export interface FilterLeaf {
+  materialized_response_and_request?: {
+    request_created_at?: {
+      gte?: string;
+      lte?: string;
+    };
+    user_api_key_hash?: {
+      equals?: {
+        user_api_key_hash: string[];
+      };
+    };
+  };
+
   user_api_keys?: {
     api_key_hash?: {
       equals?: {
@@ -37,6 +49,61 @@ export type FilterNode = FilterLeaf | FilterBranch | "all";
 
 export function buildFilterLeaf(filter: FilterLeaf): string[] {
   let filters: string[] = [];
+
+  console.log("filter", filter);
+  if (filter.materialized_response_and_request) {
+    if (filter.materialized_response_and_request.request_created_at) {
+      if (filter.materialized_response_and_request.request_created_at.gte) {
+        if (
+          isNaN(
+            Date.parse(
+              filter.materialized_response_and_request.request_created_at.gte
+            )
+          )
+        ) {
+          throw new Error(
+            "Invalid filter: filter.materialized_response_and_request.request_created_at.gte must be a valid date"
+          );
+        }
+        filters = filters.concat(
+          `request_created_at >= '${filter.materialized_response_and_request.request_created_at.gte}'`
+        );
+      }
+      if (filter.materialized_response_and_request.request_created_at.lte) {
+        if (
+          isNaN(
+            Date.parse(
+              filter.materialized_response_and_request.request_created_at.lte
+            )
+          )
+        ) {
+          throw new Error(
+            "Invalid filter: filter.materialized_response_and_request.request_created_at.lte must be a valid date"
+          );
+        }
+        filters = filters.concat(
+          `request_created_at <= '${filter.materialized_response_and_request.request_created_at.lte}'`
+        );
+      }
+    }
+    if (filter.materialized_response_and_request.user_api_key_hash) {
+      if (filter.materialized_response_and_request.user_api_key_hash.equals) {
+        filters = filters.concat(
+          filter.materialized_response_and_request.user_api_key_hash.equals.user_api_key_hash.map(
+            (hash) => {
+              if (hash.includes(")")) {
+                throw new Error(
+                  "Invalid filter: filter.materialized_response_and_request.user_api_key_hash.equals.user_api_key_hash must not contain ')'"
+                );
+              }
+              return `quote_literal(user_api_key_hash) = quote_literal('${hash}')`;
+            }
+          )
+        );
+      }
+    }
+  }
+
   if (filter.user_api_keys) {
     if (filter.user_api_keys.api_key_hash?.equals) {
       filters = filters.concat(

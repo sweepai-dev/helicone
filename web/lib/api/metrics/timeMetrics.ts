@@ -11,13 +11,11 @@ export async function getAggregatedAvgMetrics(
   user_id: string
 ): Promise<Result<AverageResponseTime, string>> {
   const query = `
-  SELECT avg(EXTRACT(epoch FROM response.created_at - request.created_at))::float AS average_response_time,
-  avg((((response.body ->> 'usage'::text)::json) ->> 'total_tokens'::text)::integer)::float AS average_tokens_per_response
-  FROM  request
-    LEFT JOIN response ON response.request = request.id
-    LEFT JOIN user_api_keys ON user_api_keys.api_key_hash = request.auth_hash
+  SELECT avg(EXTRACT(epoch FROM response_created_at - request_created_at))::float AS average_response_time,
+  avg((((response_body ->> 'usage'::text)::json) ->> 'total_tokens'::text)::integer)::float AS average_tokens_per_response
+  FROM materialized_response_and_request
 WHERE (
-  user_api_keys.user_id = '${user_id}'
+  user_api_key_user_id = '${user_id}'
   AND (${buildFilter(filter)})
 )
 `;

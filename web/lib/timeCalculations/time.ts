@@ -70,19 +70,14 @@ export function timeBackfill<T, K>(
 }
 
 export const validTimeWindow = (filter: FilterNode): boolean => {
-  const start = (filter as FilterLeaf).request?.created_at?.gte;
-  const end = (filter as FilterLeaf).request?.created_at?.lte;
+  const start = (filter as FilterLeaf).materialized_response_and_request
+    ?.request_created_at?.gte;
+  const end = (filter as FilterLeaf).materialized_response_and_request
+    ?.request_created_at?.lte;
   return start !== undefined && end !== undefined;
 };
 
-export const getTimeInterval = (filter: FilterNode): TimeIncrement => {
-  const start = (filter as FilterLeaf).request?.created_at?.gte;
-  const end = (filter as FilterLeaf).request?.created_at?.lte;
-  if (!validTimeWindow(filter)) {
-    throw new Error("Invalid filter");
-  }
-  const startD = new Date(start!);
-  const endD = new Date(end!);
+export const getTimeInterval = (startD: Date, endD: Date): TimeIncrement => {
   const diff = endD.getTime() - startD.getTime();
   if (diff < 1000 * 60 * 60 * 2) {
     return "min";

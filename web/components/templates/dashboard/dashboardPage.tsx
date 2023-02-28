@@ -44,8 +44,8 @@ const DashboardPage = (props: DashboardPageProps) => {
     useState<Loading<Result<Metrics, string>>>("loading");
   const [interval, setInterval] = useState<TimeInterval>("24h");
   const [filter, _setFilter] = useState<FilterNode>({
-    request: {
-      created_at: {
+    materialized_response_and_request: {
+      request_created_at: {
         gte: timeGraphConfig["24h"].start.toISOString(),
         lte: timeGraphConfig["24h"].end.toISOString(),
       },
@@ -124,8 +124,8 @@ const DashboardPage = (props: DashboardPageProps) => {
               setInterval(key);
               setFilter((prev) => {
                 const newFilter: FilterLeaf = {
-                  request: {
-                    created_at: {
+                  materialized_response_and_request: {
+                    request_created_at: {
                       gte: timeGraphConfig[key].start.toISOString(),
                       lte: timeGraphConfig[key].end.toISOString(),
                     },
@@ -145,12 +145,7 @@ const DashboardPage = (props: DashboardPageProps) => {
             }}
           />
           <MetricsPanel filters={filter} metrics={metrics} />
-          <TimeGraphWHeader
-            data={timeData}
-            setFilter={setFilter}
-            interval={interval}
-            setInterval={setInterval}
-          />
+          <TimeGraphWHeader data={timeData} interval={interval} />
         </div>
       )}
     </AuthLayout>

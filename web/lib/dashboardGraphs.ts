@@ -2,7 +2,7 @@ import { Dispatch, SetStateAction } from "react";
 import { Loading } from "../components/templates/dashboard/dashboardPage";
 import { CostOverTime } from "../pages/api/metrics/costOverTime";
 import { ErrorOverTime } from "../pages/api/metrics/errorOverTime";
-import { FilterNode } from "./api/metrics/filters";
+import { FilterLeaf, FilterNode } from "./api/metrics/filters";
 import { ErrorCountOverTime } from "./api/metrics/getErrorOverTime";
 import { Metrics } from "./api/metrics/metrics";
 import { Result } from "./result";
@@ -50,79 +50,90 @@ export async function getDashboardData(
   if (validTimeWindow(filter)) {
     setMetrics("loading");
     setGraphData(initialGraphDataState);
-    const timeInterval = getTimeInterval(filter);
-    fetchDataOverTime<RequestsOverTime>(
-      filter,
-      timeInterval,
-      "requestOverTime"
-    ).then(({ data, error }) => {
-      if (error !== null) {
-        console.error(error);
-        setGraphData((prev) => ({
-          ...prev,
-          requestsOverTime: { error, data: null },
-        }));
-      } else {
-        setGraphData((prev) => ({
-          ...prev,
-          requestsOverTime: {
-            data: data.map((d) => ({
-              count: +d.count,
-              time: new Date(d.time),
-            })),
-            error,
-          },
-        }));
-      }
-    });
-
-    fetchDataOverTime<CostOverTime>(filter, timeInterval, "costOverTime").then(
-      ({ data, error }) => {
-        if (error !== null) {
-          console.error(error);
-          setGraphData((prev) => ({
-            ...prev,
-            costOverTime: { error, data: null },
-          }));
-        } else {
-          setGraphData((prev) => ({
-            ...prev,
-            costOverTime: {
-              data: data.map((d) => ({
-                cost: +d.cost,
-                time: new Date(d.time),
-              })),
-              error,
-            },
-          }));
-        }
-      }
+    if (filter === "all" || "left" in filter) {
+      throw new Error("unimplemented");
+    }
+    const timeInterval = getTimeInterval(
+      new Date(
+        filter.materialized_response_and_request?.request_created_at?.gte!
+      ),
+      new Date(
+        filter.materialized_response_and_request?.request_created_at?.lte!
+      )
     );
+    console.log("timeInterval", timeInterval);
+    // fetchDataOverTime<RequestsOverTime>(
+    //   filter,
+    //   timeInterval,
+    //   "requestOverTime"
+    // ).then(({ data, error }) => {
+    //   if (error !== null) {
+    //     console.error(error);
+    //     setGraphData((prev) => ({
+    //       ...prev,
+    //       requestsOverTime: { error, data: null },
+    //     }));
+    //   } else {
+    //     setGraphData((prev) => ({
+    //       ...prev,
+    //       requestsOverTime: {
+    //         data: data.map((d) => ({
+    //           count: +d.count,
+    //           time: new Date(d.time),
+    //         })),
+    //         error,
+    //       },
+    //     }));
+    //   }
+    // });
 
-    fetchDataOverTime<ErrorOverTime>(
-      filter,
-      timeInterval,
-      "errorOverTime"
-    ).then(({ data, error }) => {
-      if (error !== null) {
-        console.error(error);
-        setGraphData((prev) => ({
-          ...prev,
-          costOverTime: { error, data: null },
-        }));
-      } else {
-        setGraphData((prev) => ({
-          ...prev,
-          errorOverTime: {
-            data: data.map((d) => ({
-              count: +d.count,
-              time: new Date(d.time),
-            })),
-            error,
-          },
-        }));
-      }
-    });
+    // fetchDataOverTime<CostOverTime>(filter, timeInterval, "costOverTime").then(
+    //   ({ data, error }) => {
+    //     if (error !== null) {
+    //       console.error(error);
+    //       setGraphData((prev) => ({
+    //         ...prev,
+    //         costOverTime: { error, data: null },
+    //       }));
+    //     } else {
+    //       setGraphData((prev) => ({
+    //         ...prev,
+    //         costOverTime: {
+    //           data: data.map((d) => ({
+    //             cost: +d.cost,
+    //             time: new Date(d.time),
+    //           })),
+    //           error,
+    //         },
+    //       }));
+    //     }
+    //   }
+    // );
+
+    // fetchDataOverTime<ErrorOverTime>(
+    //   filter,
+    //   timeInterval,
+    //   "errorOverTime"
+    // ).then(({ data, error }) => {
+    //   if (error !== null) {
+    //     console.error(error);
+    //     setGraphData((prev) => ({
+    //       ...prev,
+    //       costOverTime: { error, data: null },
+    //     }));
+    //   } else {
+    //     setGraphData((prev) => ({
+    //       ...prev,
+    //       errorOverTime: {
+    //         data: data.map((d) => ({
+    //           count: +d.count,
+    //           time: new Date(d.time),
+    //         })),
+    //         error,
+    //       },
+    //     }));
+    //   }
+    // });
 
     fetch("/api/metrics", {
       method: "POST",

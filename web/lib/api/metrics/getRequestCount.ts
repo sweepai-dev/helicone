@@ -13,12 +13,10 @@ export async function getRequestCount(
   const query = `
 SELECT 
   COUNT(*) AS count
- FROM request
-   LEFT JOIN response ON response.request = request.id
-   LEFT JOIN user_api_keys ON user_api_keys.api_key_hash = request.auth_hash
-  ${cached ? "inner join cache_hits ch ON ch.request_id = request.id" : ""}
+ FROM materialized_response_and_request
 WHERE (
-  user_api_keys.user_id = '${user_id}'
+  user_api_key_user_id = '${user_id}'
+  AND materialized_response_and_request.is_cached = ${cached ? "true" : "false"}
   AND (${buildFilter(filter)})
 )
 `;

@@ -11,17 +11,15 @@ export async function getModelMetrics(
   cached: boolean
 ) {
   const query = `
-SELECT response.body ->> 'model'::text as model,
-  sum(((response.body -> 'usage'::text) ->> 'total_tokens'::text)::bigint)::bigint AS sum_tokens
-FROM response 
-  left join request on response.request = request.id
-  left join user_api_keys on request.auth_hash = user_api_keys.api_key_hash
-  ${cached ? "inner join cache_hits ch ON ch.request_id = request.id" : ""}
+SELECT response_body ->> 'model'::text as model,
+  sum(((response_body -> 'usage'::text) ->> 'total_tokens'::text)::bigint)::bigint AS sum_tokens
+FROM materialized_response_and_request
 WHERE (
-  user_api_keys.user_id = '${user_id}'
+  user_api_key_user_id = '${user_id}'
+  AND materialized_response_and_request.is_cached = ${cached ? "true" : "false"}
   AND (${buildFilter(filter)})
 )
-GROUP BY response.body ->> 'model'::text;
+GROUP BY response_body ->> 'model'::text;
     `;
   return dbExecute<ModelMetrics>(query);
 }
