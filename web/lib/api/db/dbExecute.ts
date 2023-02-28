@@ -4,6 +4,7 @@ import { Result } from "../../result";
 export async function dbExecute<T>(
   query: string
 ): Promise<Result<T[], string>> {
+  const start = Date.now();
   const client = new Client({
     connectionString: process.env.DATABASE_URL,
     // Need to add ssl
@@ -17,11 +18,14 @@ export async function dbExecute<T>(
     const result = await client.query(query);
 
     await client.end();
+    console.log("dbExecute", query);
+    console.log("dbExecute", Date.now() - start);
 
     return { data: result.rows, error: null };
   } catch (err) {
     console.error(err);
     await client.end();
+
     return { data: null, error: JSON.stringify(err) };
   }
 }

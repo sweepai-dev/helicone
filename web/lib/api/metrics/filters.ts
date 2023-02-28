@@ -49,8 +49,6 @@ export type FilterNode = FilterLeaf | FilterBranch | "all";
 
 export function buildFilterLeaf(filter: FilterLeaf): string[] {
   let filters: string[] = [];
-
-  console.log("filter", filter);
   if (filter.materialized_response_and_request) {
     if (filter.materialized_response_and_request.request_created_at) {
       if (filter.materialized_response_and_request.request_created_at.gte) {
