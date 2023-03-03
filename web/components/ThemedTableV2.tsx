@@ -10,6 +10,8 @@ import TableRow from "@mui/material/TableRow";
 import { clsx } from "./shared/clsx";
 import { useRouter } from "next/router";
 import { ArrowsUpDownIcon, ArrowUpIcon } from "@heroicons/react/24/outline";
+import { useState } from "react";
+import { useTableCardViewContext } from "./templates/requests/switch";
 
 export interface Column {
   key: string;
@@ -33,6 +35,7 @@ interface ThemedTableV2Props {
   onPageSizeChangeHandler?: (pageSize: number) => void;
   onSelectHandler?: (row: any, idx: number) => void;
   condensed?: boolean;
+  selected: string;
 }
 
 export default function ThemedTableV2(props: ThemedTableV2Props) {
@@ -47,30 +50,17 @@ export default function ThemedTableV2(props: ThemedTableV2Props) {
     onSelectHandler,
     onPageChangeHandler,
     onPageSizeChangeHandler,
+    selected,
   } = props;
   const router = useRouter();
 
   const hasPrevious = page > 1;
   const hasNext = to <= count!;
+  console.log("COLUMNS", columns)
+  console.log("ROWS", rows)
 
-  return (
-    <div className="space-y-2">
-      <p className="text-sm text-gray-700">
-        Showing <span className="font-medium">{from + 1}</span> to{" "}
-        <span className="font-medium">{Math.min(to + 1, count as number)}</span>{" "}
-        of <span className="font-medium">{count}</span> results
-      </p>
-      <Paper
-        sx={{
-          width: "100%",
-          overflow: "hidden",
-          borderWidth: "1px",
-          borderRadius: "0.5rem",
-          boxShadow:
-            "0 0 0 0.5px rgba(0, 0, 0, 0.05), 0 0.5px 1px 0 rgba(0, 0, 0, 0.1)",
-        }}
-      >
-        <TableContainer sx={{ maxHeight: "65vh", paddingX: 1 }}>
+  const fullTable = (
+    <TableContainer sx={{ maxHeight: "65vh", paddingX: 1 }}>
           <Table
             stickyHeader
             aria-label="sticky table"
@@ -149,6 +139,7 @@ export default function ThemedTableV2(props: ThemedTableV2Props) {
                         <TableCell
                           key={`cell-${column.key}`}
                           align={column.align || "left"}
+                          
                         >
                           <p
                             className={clsx(
@@ -170,6 +161,26 @@ export default function ThemedTableV2(props: ThemedTableV2Props) {
             </TableBody>
           </Table>
         </TableContainer>
+  )
+
+  return (
+    <div className="space-y-2">
+      <p className="text-sm text-gray-700">
+        Showing <span className="font-medium">{from + 1}</span> to{" "}
+        <span className="font-medium">{Math.min(to + 1, count as number)}</span>{" "}
+        of <span className="font-medium">{count}</span> results
+      </p>
+      <Paper
+        sx={{
+          width: "100%",
+          overflow: "hidden",
+          borderWidth: "1px",
+          borderRadius: "0.5rem",
+          boxShadow:
+            "0 0 0 0.5px rgba(0, 0, 0, 0.05), 0 0.5px 1px 0 rgba(0, 0, 0, 0.1)",
+        }}
+      >
+        {fullTable}
         <div
           className="flex items-center justify-between bg-white py-2 px-4"
           aria-label="Pagination"

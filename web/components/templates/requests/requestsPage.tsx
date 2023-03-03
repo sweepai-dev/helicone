@@ -16,6 +16,7 @@ import ThemedTableV2, { Column } from "../../ThemedTableV2";
 import { Chat } from "./chat";
 import { Completion } from "./completion";
 import { CompletionRegex } from "./completionRegex";
+import { ThumbsUpDown } from "./feedback";
 import useRequestsPage from "./useRequestsPage";
 
 type Message = {
@@ -230,6 +231,7 @@ const RequestsPage = (props: RequestsPageProps) => {
     }
 
     return {
+      label: <ThumbsUpDown name={String(i)}/>,
       request_id: d.request_id ?? "Cannot find request id",
       response_id: d.response_id ?? "Cannot find response id",
       error: d.response_body?.error ?? "unknown error",
@@ -276,12 +278,22 @@ const RequestsPage = (props: RequestsPageProps) => {
   });
 
   const includePrompt = valuesColumns.length > 0;
+  const [selected, setSelected] = useState<"left" | "right">("left");
+  const isPreview = selected === "left";
+  const trunc = isPreview ? 100 : 10000;
 
-  const columns: Column[] = [
+  let columns: Column[] = [
+    {
+      key: "label",
+      label: "Label",
+      minWidth: 30,
+      type: "text",
+      format: (value: any) => value,
+    }, 
     {
       key: "time",
       label: "Time",
-      minWidth: 170,
+      minWidth: 150,
       sortBy: "request_created_at",
       type: "date",
       format: (value: string) => getUSDate(value),
@@ -289,7 +301,7 @@ const RequestsPage = (props: RequestsPageProps) => {
     includePrompt
       ? {
           key: "prompt_name",
-          label: "Prompt Name",
+          label: "Name",
           format: (value: string) => value,
           type: "text",
           filter: true,
@@ -298,9 +310,9 @@ const RequestsPage = (props: RequestsPageProps) => {
     {
       key: "request",
       label: "Request",
-      minWidth: 170,
+      minWidth: 300,
       type: "text",
-      format: (value: string) => truncString(value, 15),
+      format: (value: string) => truncString(value, trunc),
     },
     ...valuesColumns,
     {
@@ -308,7 +320,7 @@ const RequestsPage = (props: RequestsPageProps) => {
       label: "Response",
       minWidth: 170,
       type: "text",
-      format: (value: string) => (value ? truncString(value, 15) : value),
+      format: (value: string) => (value ? truncString(value, trunc) : value),
     },
     {
       key: "duration (s)",
@@ -351,6 +363,7 @@ const RequestsPage = (props: RequestsPageProps) => {
       format: (value: boolean) => (value ? "hit" : ""),
     },
   ].filter((column) => column !== null) as Column[];
+
   return (
     <>
       <AuthHeader title={"Requests"} />
@@ -368,6 +381,8 @@ const RequestsPage = (props: RequestsPageProps) => {
               ]}
               customTimeFilter
               fileName="requests.csv"
+              selected={selected}
+              setSelected={setSelected}
             />
 
             {isLoading || from === undefined || to === undefined ? (
@@ -384,6 +399,7 @@ const RequestsPage = (props: RequestsPageProps) => {
                 onSelectHandler={selectRowHandler}
                 onPageChangeHandler={onPageChangeHandler}
                 onPageSizeChangeHandler={onPageSizeChangeHandler}
+                selected={selected}
               />
             )}
           </div>
@@ -492,6 +508,7 @@ const RequestsPage = (props: RequestsPageProps) => {
             </div>
           </div>
           <div className="mt-5 sm:mt-6 w-full gap-4 flex flex-row justify-center">
+            <ThumbsUpDown name={"5"} />
             <button
               type="button"
               tabIndex={-1}

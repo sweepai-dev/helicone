@@ -41,6 +41,7 @@ import {
   ColumnType,
   TableFilterMap,
 } from "../../../services/lib/filters/frontendFilterDefs";
+import { MySwitch } from "../../templates/requests/switch";
 
 export function escapeCSVString(s: string | undefined): string | undefined {
   if (s === undefined) {
@@ -60,6 +61,8 @@ interface ThemedFilterProps {
   columns?: Column[]; // if undefined, don't show the show filters button
   filterMap?: TableFilterMap;
   onAdvancedFilter?: (advancedFilters: Filter[]) => void;
+  selected: string;
+  setSelected: Dispatch<SetStateAction<string>>;
 }
 
 export default function ThemedFilter(props: ThemedFilterProps) {
@@ -73,6 +76,8 @@ export default function ThemedFilter(props: ThemedFilterProps) {
     columns,
     filterMap,
     onAdvancedFilter,
+    selected,
+    setSelected,
   } = props;
 
   const [advancedFilters, setAdvancedFilters] = useState<Filter[]>([]);
@@ -99,6 +104,7 @@ export default function ThemedFilter(props: ThemedFilterProps) {
               />
             )}
           </div>
+          <MySwitch leftLabel="Table" rightLabel="Cards" selected={selected} setSelected={setSelected}/>
           <div className="flex flex-row space-x-2 items-center pr-2">
             {columns && (
               <div className="text-sm">
