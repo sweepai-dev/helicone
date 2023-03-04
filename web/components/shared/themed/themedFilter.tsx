@@ -104,7 +104,7 @@ export default function ThemedFilter(props: ThemedFilterProps) {
               />
             )}
           </div>
-          <MySwitch leftLabel="Table" rightLabel="Cards" selected={selected} setSelected={setSelected}/>
+          <MySwitch leftLabel="Condensed" rightLabel="Expanded" selected={selected} setSelected={setSelected}/>
           <div className="flex flex-row space-x-2 items-center pr-2">
             {columns && (
               <div className="text-sm">

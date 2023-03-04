@@ -231,7 +231,7 @@ const RequestsPage = (props: RequestsPageProps) => {
     }
 
     return {
-      label: <ThumbsUpDown name={String(i)}/>,
+      label: <ThumbsUpDown name={String(i)} />,
       request_id: d.request_id ?? "Cannot find request id",
       response_id: d.response_id ?? "Cannot find response id",
       error: d.response_body?.error ?? "unknown error",
@@ -282,6 +282,8 @@ const RequestsPage = (props: RequestsPageProps) => {
   const isPreview = selected === "left";
   const trunc = isPreview ? 100 : 10000;
 
+  const expanded_columns = ["request", "response", "label"]
+
   let columns: Column[] = [
     {
       key: "label",
@@ -310,15 +312,15 @@ const RequestsPage = (props: RequestsPageProps) => {
     {
       key: "request",
       label: "Request",
-      minWidth: 300,
+      minWidth: 600,
       type: "text",
-      format: (value: string) => truncString(value, trunc),
+      format: (value: string) => (value ? truncString(value, trunc) : value),
     },
     ...valuesColumns,
     {
       key: "response",
       label: "Response",
-      minWidth: 170,
+      minWidth: 300,
       type: "text",
       format: (value: string) => (value ? truncString(value, trunc) : value),
     },
@@ -362,7 +364,7 @@ const RequestsPage = (props: RequestsPageProps) => {
       minWidth: 170,
       format: (value: boolean) => (value ? "hit" : ""),
     },
-  ].filter((column) => column !== null) as Column[];
+  ].filter((column) => (column !== null) && (selected == "left" || (expanded_columns.includes(column.key)))) as Column[];
 
   return (
     <>
