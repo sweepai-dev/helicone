@@ -72,7 +72,7 @@ export default function ThemedTableV2(props: ThemedTableV2Props) {
                   <TableCell
                     key={column.label}
                     align={column.align}
-                    style={{ minWidth: column.minWidth }}
+                    style = {{ maxWidth: "500px" }}
                   >
                     {column.sortBy ? (
                       <button
@@ -135,18 +135,18 @@ export default function ThemedTableV2(props: ThemedTableV2Props) {
                   >
                     {columns.map((column, idx) => {
                       const value = row[column.key];
+                      console.log(value)
                       return (
                         <TableCell
                           key={`cell-${column.key}`}
                           align={column.align || "left"}
-                          
+                          // align the text to the top of the cell
+                          sx={{ verticalAlign: "top", whiteSpace: "pre-wrap" }}
                         >
                           <p
                             className={clsx(
                               condensed ? "py-1" : "",
-                              idx === 0
-                                ? " text-black font-medium"
-                                : "text-gray-500 font-normal",
+                              idx === 0 ? " text-black font-medium" : "text-gray-500 font-normal",
                               "font-sans text-sm"
                             )}
                           >

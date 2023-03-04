@@ -508,7 +508,7 @@ const AuthLayout = (props: AuthLayoutProps) => {
           <main className="flex-1 bg">
             <div className="mx-auto px-4 sm:px-8 bg-gray-100 min-h-[92.5vh]">
               {/* Replace with your content */}
-              <div className="py-4 sm:py-8 max-w-7xl">{children}</div>
+              <div className="py-4 sm:py-8">{children}</div>
               {/* /End replace */}
             </div>
           </main>

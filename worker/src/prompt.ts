@@ -67,6 +67,64 @@ function updateContentLength(clone: Request, text: string): Request {
     });
 }
 
+async function extractPromptMessages(
+    cloneRequest: Request,
+    json: any,
+): Promise<GenericResult<PromptResult>> {
+    console.log("Original body", cloneRequest.body)
+    const messages = json["messages"];
+    let formattedMessages = [];
+    let prompt = null;
+    for (let i = 0; i < messages.length; i++) {
+        let message = messages[i];
+        const parsedContent = message["content"];
+        // If the message is a JSON, we format prompt it, otherwise we just return the message
+        if (typeof parsedContent === "string") {
+            prompt = null;
+            formattedMessages.push(message);
+            continue;
+        } else if (typeof parsedContent === "object") {
+            prompt = parsedContent["prompt"]
+            const promptResult = formatPrompt(parsedContent);
+            if (promptResult.error !== null) {
+                return {
+                    data: null,
+                    error: promptResult.error,
+                };
+            }
+            message["content"] = promptResult.data;
+        } else {
+            return {
+                data: null,
+                error: "Message content is not a string or an object",
+            };
+        }
+
+        formattedMessages.push(message);
+    }
+    json["messages"] = formattedMessages;
+    console.log("FORMATTED", formattedMessages)
+    const body = JSON.stringify(json);
+    const formattedRequest = updateContentLength(cloneRequest, body);
+
+    const data = {
+        request: formattedRequest,
+        prompt,
+        body,
+    }
+    console.log("Final body", body)
+
+    return {
+        data: {
+            request: formattedRequest,
+            prompt,
+            body,
+        },
+        error: null,
+    };
+}
+
+
 export async function extractPrompt(
     request: Request,
 ): Promise<GenericResult<PromptResult>> {
@@ -77,6 +135,11 @@ export async function extractPrompt(
             const cloneRequest = request.clone();
             const cloneBody = await cloneRequest.text();
             const json = cloneBody ? JSON.parse(cloneBody) : {};
+
+            if ("messages" in json && json["messages"].length > 0) {
+                return extractPromptMessages(cloneRequest, json);
+            }
+
             const prompt = JSON.parse(json["prompt"]);
             const stringPromptResult = formatPrompt(prompt);
             if (stringPromptResult.error !== null) {

@@ -304,8 +304,11 @@ async function uncachedRequest(
   ctx: ExecutionContext
 ): Promise<Response> {
   const result = await extractPrompt(request);
+  console.log("RESULT EXTRACTED")
   if (result.data !== null) {
     const { request: formattedRequest, body: body, prompt } = result.data;
+    console.log("RESULT", body)
+    console.log("PROMPT", prompt)
     return await forwardAndLog(body, formattedRequest, env, ctx, prompt);
   } else {
     return new Response(result.error, { status: 400 });

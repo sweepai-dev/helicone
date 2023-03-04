@@ -42,6 +42,7 @@ import {
   TableFilterMap,
 } from "../../../services/lib/filters/frontendFilterDefs";
 import { MySwitch } from "../../templates/requests/switch";
+import ThemedTextDropDown from "./themedTextDropDown";
 
 export function escapeCSVString(s: string | undefined): string | undefined {
   if (s === undefined) {
@@ -60,6 +61,7 @@ interface ThemedFilterProps {
   fileName?: string; // if undefined, then we use the default file name
   columns?: Column[]; // if undefined, don't show the show filters button
   filterMap?: TableFilterMap;
+  defaultTimeFilter?: TimeInterval;
   onAdvancedFilter?: (advancedFilters: Filter[]) => void;
   selected: string;
   setSelected: Dispatch<SetStateAction<string>>;
@@ -74,6 +76,7 @@ export default function ThemedFilter(props: ThemedFilterProps) {
     customTimeFilter = false,
     fileName = "export.csv",
     columns,
+    defaultTimeFilter,
     filterMap,
     onAdvancedFilter,
     selected,
@@ -99,14 +102,16 @@ export default function ThemedFilter(props: ThemedFilterProps) {
                 onSelect={(key, value) =>
                   onTimeSelectHandler(key as TimeInterval, value)
                 }
-                defaultValue="24h"
+                defaultValue={defaultTimeFilter ?? "all"}
                 custom={customTimeFilter}
               />
             )}
           </div>
-          <MySwitch leftLabel="Condensed" rightLabel="Expanded" selected={selected} setSelected={setSelected}/>
+          <div className="ml-auto space-x-2 pr-6">
+            <MySwitch leftLabel="Condensed" rightLabel="Expanded" selected={selected} setSelected={setSelected}/>
+          </div>
           <div className="flex flex-row space-x-2 items-center pr-2">
-            {columns && (
+            {onAdvancedFilter && (
               <div className="text-sm">
                 <div className="mx-auto flex">
                   <div>
@@ -177,7 +182,7 @@ export default function ThemedFilter(props: ThemedFilterProps) {
           </div>
         </div>
 
-        {columns && onAdvancedFilter && (
+        {onAdvancedFilter && (
           <div
             className={clsx(
               showAdvancedFilters ? "block" : "hidden",
@@ -247,7 +252,7 @@ function AdvancedFilters({
   setAdvancedFilters: Dispatch<SetStateAction<Filter[]>>;
 }) {
   return (
-    <>
+    <div className="">
       {filters.map((_filter, index) => {
         return (
           <div key={_filter.id}>
@@ -274,7 +279,7 @@ function AdvancedFilters({
           </div>
         );
       })}
-    </>
+    </div>
   );
 }
 
@@ -282,10 +287,12 @@ function AdvancedFilterInput({
   type,
   value,
   onChange,
+  inputParams,
 }: {
   type: ColumnType;
   value: string;
   onChange: (value: string) => void;
+  inputParams?: string[];
 }) {
   switch (type) {
     case "text":
@@ -318,8 +325,16 @@ function AdvancedFilterInput({
           className="block w-full rounded-md border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-sm"
         />
       );
-    default:
-      return <></>;
+    case "text-with-suggestions":
+      return (
+        <>
+          <ThemedTextDropDown
+            options={inputParams ?? []}
+            onChange={(e) => onChange(e)}
+            value={value}
+          />
+        </>
+      );
   }
 }
 
@@ -380,13 +395,17 @@ function AdvancedFilterRow({
         return "greater than or equal to";
       case "lte":
         return "less than or equal to";
+      case "like":
+        return "like";
+      case "ilike":
+        return "ilike";
       default:
         return "";
     }
   };
 
   return (
-    <div className="w-full flex flex-col sm:flex-row gap-2 items-left sm:items-center ">
+    <div className="w-full flex flex-col lg:flex-row gap-2 items-left lg:items-center ">
       <ThemedDropdownV2
         options={tables.map((table) => {
           return {
@@ -398,7 +417,7 @@ function AdvancedFilterRow({
         onSelect={(selected) => {
           setTable(selected);
         }}
-        className="w-full sm:w-fit"
+        className="w-full lg:w-fit"
         label="Table"
       />
       {columnsEntries && (
@@ -413,7 +432,7 @@ function AdvancedFilterRow({
           onSelect={(selected) => {
             setColumn(selected);
           }}
-          className="w-full sm:w-fit"
+          className="w-full lg:w-fit"
           label="Column"
         />
       )}
@@ -430,14 +449,15 @@ function AdvancedFilterRow({
           onSelect={(selected) => {
             setOperator(selected);
           }}
-          className="w-full sm:w-fit"
+          className="w-full lg:w-fit"
         />
       )}
       {selectedOperator && (
-        <div className="w-full sm:w-fit">
+        <div className="w-full lg:w-fit">
           <AdvancedFilterInput
             type={selectedOperator.type}
             value={value}
+            inputParams={selectedOperator.inputParams}
             onChange={(value) => {
               let filter: any = {};
               filter[table] = {};
@@ -450,7 +470,7 @@ function AdvancedFilterRow({
         </div>
       )}
 
-      <div className="w-full sm:w-fit border-b pb-4 sm:border-b-0 sm:pb-0 justify-end flex sm:justify-center">
+      <div className="w-full lg:w-fit border-b pb-4 lg:border-b-0 lg:pb-0 justify-end flex lg:justify-center">
         <button
           type="button"
           className="inline-flex items-center rounded-md bg-red-600 p-1.5 text-sm font-medium leading-4 text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-30"
