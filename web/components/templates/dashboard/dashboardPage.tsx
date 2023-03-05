@@ -151,11 +151,11 @@ const DashboardPage = (props: DashboardPageProps) => {
             isFetching={metrics === "loading"}
             customTimeFilter
             timeFilterOptions={[
-              { key: "1h", value: "hour" },
-              { key: "24h", value: "day" },
-              { key: "7d", value: "wk" },
-              { key: "1m", value: "mo" },
-              { key: "3m", value: "3mo" },
+              { key: "1h", value: "Last Hour" },
+              { key: "24h", value: "Today" },
+              { key: "7d", value: "7D" },
+              { key: "1m", value: "1M" },
+              { key: "3m", value: "3M" },
             ]}
             defaultTimeFilter={interval}
             filterMap={filterMap}

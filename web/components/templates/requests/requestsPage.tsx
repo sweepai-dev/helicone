@@ -68,6 +68,17 @@ interface RequestsPageProps {
   sortBy: string | null;
 }
 
+function capitalizeWords(str: string): string {
+  // split the string into an array of words
+  const words = str.split(" ");
+
+  // map over each word and capitalize the first letter
+  const capitalizedWords = words.map(word => word.charAt(0).toUpperCase() + word.slice(1));
+
+  // join the capitalized words back into a single string
+  return capitalizedWords.join(" ");
+}
+
 const RequestsPage = (props: RequestsPageProps) => {
   const { page, pageSize, sortBy } = props;
 
@@ -298,7 +309,7 @@ const RequestsPage = (props: RequestsPageProps) => {
   const valuesColumns = values.map((p) => {
     return {
       key: p,
-      label: p,
+      label: capitalizeWords(p),
       format: (value: string) => (value ? truncString(value, 15) : value),
     };
   });
@@ -415,10 +426,11 @@ const RequestsPage = (props: RequestsPageProps) => {
               isFetching={isLoading}
               onTimeSelectHandler={onTimeSelectHandler}
               timeFilterOptions={[
-                { key: "24h", value: "day" },
-                { key: "7d", value: "wk" },
-                { key: "1m", value: "mo" },
-                { key: "all", value: "all" },
+                { key: "1h", value: "Last Hour" },
+                { key: "24h", value: "Today" },
+                { key: "7d", value: "7D" },
+                { key: "1m", value: "1M" },
+                { key: "3m", value: "3M" },
               ]}
               customTimeFilter
               fileName="requests.csv"

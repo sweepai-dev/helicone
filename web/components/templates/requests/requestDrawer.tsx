@@ -39,7 +39,7 @@ const RequestDrawer = (props: RequestDrawerProps) => {
 
   const makePropertyRow = (name: string, val: string) => {
     return (
-      <div className="py-2 text-xs font-medium">
+      <div className="py-2 text-sm font-medium">
         <dt className="text-gray-500">{name}</dt>
         <dd className="text-gray-900">{val || "{NULL}"}</dd>
       </div>
@@ -54,29 +54,29 @@ const RequestDrawer = (props: RequestDrawerProps) => {
       copyData={""}
     >
       <div className="grid grid-cols-3 gap-4 mt-2 border-gray-200">
-  <div className="py-2 text-xs font-medium">
+  <div className="py-2 text-sm font-medium">
     <dt className="text-gray-500">Time</dt>
     <dd className="text-gray-900">
       {new Date(request.time || "").toLocaleString()}
     </dd>
   </div>
-  <div className="py-2 text-xs font-medium">
+  <div className="py-2 text-sm font-medium">
     <dt className="text-gray-500">User ID</dt>
     <dd className="text-gray-900">{request.request_user_id || "n/a"}</dd>
   </div>
-  <div className="py-2 text-xs font-medium">
+  <div className="py-2 text-sm font-medium">
     <dt className="text-gray-500">Duration</dt>
     <dd className="text-gray-900">{request["duration (s)"]}s</dd>
   </div>
-  <div className="py-2 text-xs font-medium">
+  <div className="py-2 text-sm font-medium">
     <dt className="text-gray-500">Model</dt>
     <dd className="text-gray-900">{request.model}</dd>
   </div>
-  <div className="py-2 text-xs font-medium">
+  <div className="py-2 text-sm font-medium">
     <dt className="text-gray-500">Tokens</dt>
     <dd className="text-gray-900">{request.total_tokens}</dd>
   </div>
-  <div className="py-2 text-xs font-medium">
+  <div className="py-2 text-sm font-medium">
     <dt className="text-gray-500">Log Probability</dt>
     <dd className="text-gray-900">
       {probabilities[index] ? (
@@ -106,7 +106,17 @@ const RequestDrawer = (props: RequestDrawerProps) => {
       )}
       <div className="mt-4">
         {request.isChat ? (
-          <Chat chatProperties={request.chatProperties} />
+          <Chat chatProperties={request.chatProperties} prompt_regex={request.prompt_regex} keys={values.reduce((acc, key) => {
+            console.log("REQUEST", request.prompt_regex)
+            console.log("REQUEST", request["adjective"])
+            if (request.hasOwnProperty(key)) {
+              return {
+                ...acc,
+                [key]: request[key],
+              };
+            }
+            return acc;
+          }, {})} />
         ) : !request.prompt_regex ? (
           <Completion request={request.request} response={request.response} />
         ) : (

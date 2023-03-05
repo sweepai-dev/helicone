@@ -4,14 +4,25 @@ export interface Prompt {
     prompt: string;
     values: { [key: string]: string };
 }
+
+interface Message {
+    role: string;
+    content: string;
+}
+
+export interface ChatPrompt {
+    prompt: Message[];
+    values: { [key: string]: string };
+}
  
 interface PromptResult {
     request: Request,
     body: string,
-    prompt?: Prompt,
+    prompt?: Prompt | ChatPrompt,
 }
 
 function formatPrompt(prompt: Prompt): Result {
+    console.log("PROMPT IN FORMATTER", prompt)
     let formattedString = prompt.prompt;
     const missingValues = [];
 
@@ -22,13 +33,6 @@ function formatPrompt(prompt: Prompt): Result {
         } else {
             formattedString = formattedString.replace(placeholder, prompt.values[key]);
         }
-    }
-
-    if (missingValues.length > 0) {
-        return {
-            data: null,
-            error: `Missing values in the prompt: ${missingValues.join(', ')}`,
-        };
     }
 
     const regex = /{{([^{}]+)}}/g;
@@ -72,35 +76,36 @@ async function extractPromptMessages(
     json: any,
 ): Promise<GenericResult<PromptResult>> {
     console.log("Original body", cloneRequest.body)
-    const messages = json["messages"];
+    const regexPrompt = json["messages"];
+    const regexMessages = regexPrompt["prompt"];
+    const regexValues = regexPrompt["values"];
+
     let formattedMessages = [];
-    let prompt = null;
-    for (let i = 0; i < messages.length; i++) {
-        let message = messages[i];
-        const parsedContent = message["content"];
-        // If the message is a JSON, we format prompt it, otherwise we just return the message
-        if (typeof parsedContent === "string") {
-            prompt = null;
-            formattedMessages.push(message);
-            continue;
-        } else if (typeof parsedContent === "object") {
-            prompt = parsedContent["prompt"]
-            const promptResult = formatPrompt(parsedContent);
-            if (promptResult.error !== null) {
-                return {
-                    data: null,
-                    error: promptResult.error,
-                };
+    for (let i = 0; i < regexMessages.length; i++) {
+        let message = regexMessages[i];
+        const content = message["content"];
+
+        const formattedContent = formatPrompt(
+            {
+                prompt: content,
+                values: regexValues,
             }
-            message["content"] = promptResult.data;
-        } else {
+        )
+
+        if (formattedContent.error !== null) {
+            console.log("ERROR", formattedContent.error)
             return {
                 data: null,
-                error: "Message content is not a string or an object",
+                error: formattedContent.error,
             };
         }
 
-        formattedMessages.push(message);
+        const formattedMessage = {
+            ...message,
+            content: formattedContent.data,
+        }
+
+        formattedMessages.push(formattedMessage);
     }
     json["messages"] = formattedMessages;
     console.log("FORMATTED", formattedMessages)
@@ -109,15 +114,15 @@ async function extractPromptMessages(
 
     const data = {
         request: formattedRequest,
-        prompt,
+        prompt: regexPrompt,
         body,
     }
-    console.log("Final body", body)
+    console.log("Final data", data)
 
     return {
         data: {
             request: formattedRequest,
-            prompt,
+            prompt: regexPrompt,
             body,
         },
         error: null,
@@ -128,6 +133,7 @@ async function extractPromptMessages(
 export async function extractPrompt(
     request: Request,
 ): Promise<GenericResult<PromptResult>> {
+    console.log("IN EXTRACT")
     const isPromptRegexOn = request.headers.get("Helicone-Prompt-Format") !== null;
 	
     if (isPromptRegexOn) {
@@ -135,8 +141,8 @@ export async function extractPrompt(
             const cloneRequest = request.clone();
             const cloneBody = await cloneRequest.text();
             const json = cloneBody ? JSON.parse(cloneBody) : {};
-
-            if ("messages" in json && json["messages"].length > 0) {
+            if ("messages" in json) {
+                console.log("LETS GO")
                 return extractPromptMessages(cloneRequest, json);
             }
 
