@@ -10,6 +10,7 @@ import { Chat } from "./chat";
 import { Completion } from "./completion";
 import { CompletionRegex } from "./completionRegex";
 import { ThumbsUpDown } from "./feedback";
+import { Feedback } from "./provideFeedback";
 import { capitalizeWords } from "./requestsPage";
 import { MySwitch } from "./switch";
 
@@ -55,6 +56,8 @@ const RequestDrawer = (props: RequestDrawerProps) => {
   };
 
   const [selected, setSelected] = useState<"left" | "right">("left");
+  const [feedback, setFeedback] = useState("");
+  const [feedbackFinal, setFeedbackFinal] = useState("");
 
   return (
     <ThemedDrawer
@@ -156,10 +159,23 @@ const RequestDrawer = (props: RequestDrawerProps) => {
       </div>
       {/* Put significant space in between the following button and the components above, and center it */}
       <div className="mt-4 flex flex-row justify-end">
+        <div className="px-4 py-2 text-sm font-medium">
+          <Feedback onFeedbackSubmit={(feedback) => console.log(feedback)} feedback={feedback} setFeedback={setFeedback} setFeedbackFinal={setFeedbackFinal} />
+        </div>
         <ThumbsUpDown name="hi" selected={thumbs[index] || undefined} setSelected={setThumbs} id={index} />
       </div>
-    </ThemedDrawer>
-  );
+      <div class="flex justify-end">
+  <div class="w-1/3">
+    <div class="flex flex-col text-left space-y-1">
+      {/* <p class="flex space-y-1 text-gray-500 font-small text-xs justify-end">Feedback</p> */}
+      <p class="p-2 border border-gray-100 bg-gray-50 rounded-md whitespace-pre-wrap h-full overflow-auto text-xs text-right">
+        {feedbackFinal}
+      </p>
+    </div>
+  </div>
+</div>
+
+    </ThemedDrawer>);
 };
 
 export default RequestDrawer;
