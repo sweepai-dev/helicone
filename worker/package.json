@@ -12,6 +12,7 @@
     "deploy": "wrangler publish"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.1.1"
+    "@supabase/supabase-js": "^2.1.1",
+    "react-json-pretty": "^2.2.0"
   }
 }

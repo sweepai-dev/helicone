@@ -228,6 +228,8 @@ const RequestsPage = (props: RequestsPageProps) => {
     }
     const is_chat = d.request_path?.includes("/chat/") ?? false;
 
+    const is_moderation = d.request_path?.includes("/moderations") ?? false;
+
     let request;
     let response;
     let chatProperties: ChatProperties | null = null;
@@ -249,10 +251,17 @@ const RequestsPage = (props: RequestsPageProps) => {
       chatProperties = {
         request:
           typeof request_messages === "string"
-            ? JSON.parse(request_messages)
+            ? JSON.parse(request_messages, null, 2)
             : request_messages,
         response: response_blob?.message,
       };
+    }
+    else if (is_moderation) {
+      chatProperties = null;
+      request = d.request_body?.input
+      console.log("MODERATION", d)
+      response = JSON.stringify(d.response_body?.results[0])
+
     } else {
       chatProperties = null;
       request = d.request_body?.prompt
