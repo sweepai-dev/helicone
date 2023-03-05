@@ -6,6 +6,7 @@ import { useState } from "react";
 import useNotification from "../../shared/notification/useNotification";
 import ThemedDrawer from "../../shared/themed/themedDrawer";
 import ThemedModal from "../../shared/themed/themedModal";
+import ArrowButtons from "./arrowButtons";
 import { Chat } from "./chat";
 import { Completion } from "./completion";
 import { CompletionRegex } from "./completionRegex";
@@ -164,15 +165,16 @@ const RequestDrawer = (props: RequestDrawerProps) => {
         </div>
         <ThumbsUpDown name="hi" selected={thumbs[index] || undefined} setSelected={setThumbs} id={index} />
       </div>
-      <div class="flex justify-end">
-  <div class="w-1/3">
-    <div class="flex flex-col text-left space-y-1">
+      <ArrowButtons />
+      <div className="flex justify-end">
+  {feedbackFinal !== "" && <div className="w-1/3">
+    <div className="flex flex-col text-left space-y-1">
       {/* <p class="flex space-y-1 text-gray-500 font-small text-xs justify-end">Feedback</p> */}
-      <p class="p-2 border border-gray-100 bg-gray-50 rounded-md whitespace-pre-wrap h-full overflow-auto text-xs text-right">
+      <p className="p-2 border border-gray-100 bg-gray-50 rounded-md whitespace-pre-wrap h-full overflow-auto text-xs text-right">
         {feedbackFinal}
       </p>
     </div>
-  </div>
+  </div>}
 </div>
 
     </ThemedDrawer>);

@@ -510,6 +510,7 @@ const RequestsPage = (props: RequestsPageProps) => {
           values={values}
           thumbs={thumbs}
           setThumbs={setThumbs}
+          onSelectHandler={selectRowHandler}
         />
       )}
     </>

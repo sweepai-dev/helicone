@@ -1,4 +1,6 @@
 import { capitalizeWords, CsvData } from "./requestsPage";
+import ReactDOMServer from 'react-dom/server';
+import Hover from "./hover";
 
 interface CompletionRegexProps {
   prompt_name?: string;
@@ -20,31 +22,46 @@ export interface Result {
 }
 
 function formatPrompt(prompt: Prompt): Result {
-    let formattedString = prompt.prompt;
     const missingValues = [];
-
-    for (const key in prompt.values) {
-        const placeholder = new RegExp(`{{${key}}}`, 'g');
-        if (!formattedString.includes(`{{${key}}}`)) {
-            missingValues.push(key);
-        } else {
-            formattedString = formattedString.replace(placeholder, `<span class="text-red-500">${prompt.values[key]}</span>`);
+    let formattedString = prompt.prompt;
+    const elements = formattedString.split(/({{[^}]+}})/g).map((part) => {
+      const match = part.match(/{{([^}]+)}}/);
+      if (match) {
+        const key = match[1];
+        const value = prompt.values[key];
+        if (value === undefined) {
+          missingValues.push(key);
+          return null;
         }
-    }
+        return <Hover value={value} name={key} />;
+      }
+      return part;
+    });
+  
+    const output = (
+      <div>
+        <p>
+          {elements}
+        </p>
+      </div>
+    );
+  
+    
+    console.log("FORMATTED STRING", formattedString)
 
-    const regex = /{{([^{}]+)}}/g;
-    let match = regex.exec(formattedString);
-    const missingPlaceholders = [];
+    // const regex = /{{([^{}]+)}}/g;
+    // let match = regex.exec(formattedString);
+    // const missingPlaceholders = [];
 
-    while (match) {
-        if (!prompt.values.hasOwnProperty(match[1])) {
-            missingPlaceholders.push(match[1]);
-        }
-        match = regex.exec(formattedString);
-    }
+    // while (match) {
+    //     if (!prompt.values.hasOwnProperty(match[1])) {
+    //         missingPlaceholders.push(match[1]);
+    //     }
+    //     match = regex.exec(formattedString);
+    // }A
 
     return {
-        data: <div dangerouslySetInnerHTML={{ __html: formattedString }} />,
+        data: <div>{output}</div>,
         error: null,
     };
 }
@@ -87,7 +104,7 @@ export const CompletionRegex = (props: CompletionRegexProps) => {
     <div className="flex flex-col gap-2 text-sm w-full space-y-2">
       <div className="w-full flex flex-col text-left space-y-1">
         <p className="text-gray-500 font-medium">Request</p>
-        <p className="p-2 border border-gray-300 bg-gray-100 rounded-md whitespace-pre-wrap h-full max-h-[300px] overflow-auto">
+        <p className="p-2 border border-gray-300 bg-gray-100 rounded-md whitespace-pre-wrap h-full max-h-[300px] overflow-visible ">
           {formattedRequest}
         </p>
       </div>
