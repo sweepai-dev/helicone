@@ -35,11 +35,15 @@ interface RequestDrawerProps {
   index: number;
   properties: string[];
   values: string[];
+  thumbs: { [key: number]: "thumbs-up" | "thumbs-down" | undefined };
+  setThumbs: (thumbs: { [key: number]: "thumbs-up" | "thumbs-down" | undefined }) => void;
 }
 
 const RequestDrawer = (props: RequestDrawerProps) => {
-  const { open, setOpen, request, probabilities, index, properties, values } =
+  const { open, setOpen, request, probabilities, index, properties, values, thumbs, setThumbs } =
     props;
+
+    console.log("THUMBS UP DOWN INDEX", index, thumbs)
 
   const makePropertyRow = (name: string, val: string) => {
     return (
@@ -152,7 +156,7 @@ const RequestDrawer = (props: RequestDrawerProps) => {
       </div>
       {/* Put significant space in between the following button and the components above, and center it */}
       <div className="mt-4 flex flex-row justify-end">
-        <ThumbsUpDown name="hi" />
+        <ThumbsUpDown name="hi" selected={thumbs[index] || undefined} setSelected={setThumbs} id={index} />
       </div>
     </ThemedDrawer>
   );

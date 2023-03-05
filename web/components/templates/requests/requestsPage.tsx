@@ -90,7 +90,8 @@ const RequestsPage = (props: RequestsPageProps) => {
   const [currentPageSize, setCurrentPageSize] = useState<number>(pageSize);
   const [advancedFilter, setAdvancedFilter] = useState<FilterNode>("all");
   const [isTableRowOnClickDisabled, setIsTableRowOnClickDisabled] = useState<boolean>(false);
-  const [thumbs, setThumbs] = useState({});
+  const [thumbs, setThumbs] = useState<{ [key: number]: "thumbs-up" | "thumbs-down" | undefined }>({});
+  console.log("THUMBS UP DOWN OG THUMBS", thumbs)
 
   const [timeFilter, setTimeFilter] = useState<FilterNode>({
     request: {
@@ -285,7 +286,7 @@ const RequestsPage = (props: RequestsPageProps) => {
     }
 
     return {
-      label: <ThumbsUpDown name={String(i)} setDisabled={setIsTableRowOnClickDisabled} />,
+      label: <ThumbsUpDown name={String(i)} setDisabled={setIsTableRowOnClickDisabled} selected={thumbs[i] || undefined} setSelected={setThumbs} id={i} />,
       request_id: d.request_id ?? "Cannot find request id",
       response_id: d.response_id ?? "Cannot find response id",
       error: d.response_body?.error ?? "unknown error",
@@ -507,6 +508,8 @@ const RequestsPage = (props: RequestsPageProps) => {
           request={selectedData}
           setOpen={setOpen}
           values={values}
+          thumbs={thumbs}
+          setThumbs={setThumbs}
         />
       )}
     </>
