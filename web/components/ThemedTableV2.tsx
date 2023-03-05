@@ -36,6 +36,7 @@ interface ThemedTableV2Props {
   onSelectHandler?: (row: any, idx: number) => void;
   condensed?: boolean;
   selected: string;
+  isTableRowOnClickDisabled?: boolean;
 }
 
 export default function ThemedTableV2(props: ThemedTableV2Props) {
@@ -51,6 +52,7 @@ export default function ThemedTableV2(props: ThemedTableV2Props) {
     onPageChangeHandler,
     onPageSizeChangeHandler,
     selected,
+    isTableRowOnClickDisabled,
   } = props;
   const router = useRouter();
 
@@ -72,7 +74,7 @@ export default function ThemedTableV2(props: ThemedTableV2Props) {
                   <TableCell
                     key={column.label}
                     align={column.align}
-                    style = {{ maxWidth: "500px" }}
+                    style={{ minWidth: column.minWidth }}
                   >
                     {column.sortBy ? (
                       <button
@@ -130,7 +132,7 @@ export default function ThemedTableV2(props: ThemedTableV2Props) {
                     role="checkbox"
                     tabIndex={-1}
                     key={`row-${idx}`}
-                    onClick={() => onSelectHandler && onSelectHandler(row, idx)}
+                    onClick={() => (isTableRowOnClickDisabled !== true) && onSelectHandler && onSelectHandler(row, idx)}
                     className="hover:cursor-pointer"
                   >
                     {columns.map((column, idx) => {

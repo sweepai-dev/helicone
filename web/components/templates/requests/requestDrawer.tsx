@@ -2,12 +2,16 @@ import {
   ClipboardDocumentIcon,
   ClipboardDocumentListIcon,
 } from "@heroicons/react/24/outline";
+import { useState } from "react";
 import useNotification from "../../shared/notification/useNotification";
 import ThemedDrawer from "../../shared/themed/themedDrawer";
 import ThemedModal from "../../shared/themed/themedModal";
 import { Chat } from "./chat";
 import { Completion } from "./completion";
 import { CompletionRegex } from "./completionRegex";
+import { ThumbsUpDown } from "./feedback";
+import { capitalizeWords } from "./requestsPage";
+import { MySwitch } from "./switch";
 
 interface RequestDrawerProps {
   open: boolean;
@@ -40,11 +44,13 @@ const RequestDrawer = (props: RequestDrawerProps) => {
   const makePropertyRow = (name: string, val: string) => {
     return (
       <div className="py-2 text-sm font-medium">
-        <dt className="text-gray-500">{name}</dt>
+        <dt className="text-gray-500">{capitalizeWords(name)}</dt>
         <dd className="text-gray-900">{val || "{NULL}"}</dd>
       </div>
     );
   };
+
+  const [selected, setSelected] = useState<"left" | "right">("left");
 
   return (
     <ThemedDrawer
@@ -118,25 +124,35 @@ const RequestDrawer = (props: RequestDrawerProps) => {
             return acc;
           }, {})} />
         ) : !request.prompt_regex ? (
-          <Completion request={request.request} response={request.response} />
+          <Completion request={request.request} response={request.response} isModeration={request.isModeration} moderationFullResponse={request.moderationFullResponse} />
         ) : (
-          <CompletionRegex
-            prompt_regex={request.prompt_regex}
-            prompt_name={request.prompt_name}
-            // keys is the values for all the keys in `values`
-            keys={values.reduce((acc, key) => {
-              if (request.hasOwnProperty(key)) {
-                return {
-                  ...acc,
-                  [key]: request[key],
-                };
-              }
-              return acc;
-            }, {})}
-            response={request.response}
-            values={values}
-          />
+          <div>
+            <div className="flex flex-row justify-end">
+              <MySwitch leftLabel="Full" rightLabel="Variables" selected={selected} setSelected={setSelected} />
+            </div>
+            <CompletionRegex
+              prompt_regex={request.prompt_regex}
+              prompt_name={request.prompt_name}
+              // keys is the values for all the keys in `values`
+              keys={values.reduce((acc, key) => {
+                if (request.hasOwnProperty(key)) {
+                  return {
+                    ...acc,
+                    [key]: request[key],
+                  };
+                }
+                return acc;
+              }, {})}
+              response={request.response}
+              values={values}
+              showFull={selected != "left"}
+            />
+          </div>
         )}
+      </div>
+      {/* Put significant space in between the following button and the components above, and center it */}
+      <div className="mt-4 flex flex-row justify-end">
+        <ThumbsUpDown name="hi" />
       </div>
     </ThemedDrawer>
   );

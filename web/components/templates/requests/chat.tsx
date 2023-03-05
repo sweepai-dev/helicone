@@ -25,10 +25,12 @@ function formatPrompt(prompt: Prompt): Result {
     const missingValues = [];
 
     for (const key in prompt.values) {
+        console.log("KEY", key)
         const placeholder = new RegExp(`{{${key}}}`, 'g');
         if (!formattedString.includes(`{{${key}}}`)) {
             missingValues.push(key);
         } else {
+            console.log("KEY REPLACING", key)
             formattedString = formattedString.replace(placeholder, `<span class="text-red-500">${prompt.values[key]}</span>`);
         }
     }
@@ -42,13 +44,6 @@ function formatPrompt(prompt: Prompt): Result {
             missingPlaceholders.push(match[1]);
         }
         match = regex.exec(formattedString);
-    }
-
-    if (missingPlaceholders.length > 0) {
-        return {
-            data: <div>{null}</div>,
-            error: `Missing placeholders in the prompt regex: ${missingPlaceholders.join(', ')}`,
-        };
     }
 
     return {
@@ -71,7 +66,6 @@ export const Chat = (props: ChatProps) => {
     messages = messages.concat([response]);
   }
 
-  console.log(messages);
 
   return (
     <div className="w-full flex flex-col text-left space-y-1 text-sm">
@@ -80,6 +74,7 @@ export const Chat = (props: ChatProps) => {
         <div className="flex-1 h-0">
       {/* <div className="text-sm w-full border border-gray-300 rounded-md overflow-auto divide-y divide-gray-200 h-full max-h-[500px]"> */}
         {messages.map((message, index) => {
+        console.log("MESSAGES MESSAGES MESSAGES", message);
           const isAssistant = message.role === "assistant";
           const isSystem = message.role === "system";
           const isUser = message.role === "user";

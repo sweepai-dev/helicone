@@ -12,6 +12,8 @@ interface ThemedTextDropDownProps {
 export default function ThemedTextDropDown(props: ThemedTextDropDownProps) {
   const { options, onChange, value } = props;
   const [isFocused, setIsFocused] = useState(false);
+  console.log("OPTIONS", options)
+  console.log("VALUE", value)
 
   const filteredPeople = isFocused
     ? options.filter((data) => {

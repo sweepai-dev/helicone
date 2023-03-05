@@ -63,8 +63,8 @@ interface ThemedFilterProps {
   filterMap?: TableFilterMap;
   defaultTimeFilter?: TimeInterval;
   onAdvancedFilter?: (advancedFilters: Filter[]) => void;
-  selected: string;
-  setSelected: Dispatch<SetStateAction<string>>;
+  selected?: string;
+  setSelected?: Dispatch<SetStateAction<string>>;
 }
 
 export default function ThemedFilter(props: ThemedFilterProps) {
@@ -107,9 +107,9 @@ export default function ThemedFilter(props: ThemedFilterProps) {
               />
             )}
           </div>
-          <div className="ml-auto space-x-2 pr-6">
+          {selected && <div className="ml-auto space-x-2 pr-6">
             <MySwitch leftLabel="Condensed" rightLabel="Expanded" selected={selected} setSelected={setSelected}/>
-          </div>
+          </div>}
           <div className="flex flex-row space-x-2 items-center pr-2">
             {onAdvancedFilter && (
               <div className="text-sm">

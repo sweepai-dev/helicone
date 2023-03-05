@@ -58,6 +58,8 @@ export type CsvData = {
   isCached: boolean;
   isChat: boolean;
   chatProperties: ChatProperties | null;
+  isModeration: boolean;
+  moderationFullResponse: string | null;
 } & {
   [keys: string]: string | number | null | boolean | ChatProperties;
 };
@@ -68,7 +70,7 @@ interface RequestsPageProps {
   sortBy: string | null;
 }
 
-function capitalizeWords(str: string): string {
+export function capitalizeWords(str: string): string {
   // split the string into an array of words
   const words = str.split(" ");
 
@@ -87,6 +89,8 @@ const RequestsPage = (props: RequestsPageProps) => {
   const [currentPage, setCurrentPage] = useState<number>(page);
   const [currentPageSize, setCurrentPageSize] = useState<number>(pageSize);
   const [advancedFilter, setAdvancedFilter] = useState<FilterNode>("all");
+  const [isTableRowOnClickDisabled, setIsTableRowOnClickDisabled] = useState<boolean>(false);
+  const [thumbs, setThumbs] = useState({});
 
   const [timeFilter, setTimeFilter] = useState<FilterNode>({
     request: {
@@ -182,6 +186,8 @@ const RequestsPage = (props: RequestsPageProps) => {
       prompt_regex: string | undefined;
       isChat: boolean;
       chatProperties: ChatProperties | null;
+      isModeration: boolean;
+      moderationFullResponse: string | null;
       [keys: string]: any;
     },
     idx: number
@@ -233,9 +239,11 @@ const RequestsPage = (props: RequestsPageProps) => {
     let request;
     let response;
     let chatProperties: ChatProperties | null = null;
+    let moderationFullResponse: string | null = null;
 
     if (is_chat) {
       const request_messages = d.request_body?.messages;
+      console.log("REQUEST MESSAGES", request_messages)
       const last_request_message =
         request_messages?.[request_messages.length - 1].content;
       const response_blob = d.response_body?.choices?.[0];
@@ -261,7 +269,7 @@ const RequestsPage = (props: RequestsPageProps) => {
       request = d.request_body?.input
       console.log("MODERATION", d)
       response = JSON.stringify(d.response_body?.results[0])
-
+      moderationFullResponse = JSON.stringify(d.response_body?.results[0])
     } else {
       chatProperties = null;
       request = d.request_body?.prompt
@@ -277,7 +285,7 @@ const RequestsPage = (props: RequestsPageProps) => {
     }
 
     return {
-      label: <ThumbsUpDown name={String(i)} />,
+      label: <ThumbsUpDown name={String(i)} setDisabled={setIsTableRowOnClickDisabled} />,
       request_id: d.request_id ?? "Cannot find request id",
       response_id: d.response_id ?? "Cannot find response id",
       error: d.response_body?.error ?? "unknown error",
@@ -293,6 +301,8 @@ const RequestsPage = (props: RequestsPageProps) => {
       prompt_name: d.prompt_name ?? "",
       isCached: d.is_cached ?? false,
       isChat: is_chat,
+      isModeration: is_moderation,
+      moderationFullResponse: moderationFullResponse,
       chatProperties: chatProperties,
       ...updated_request_properties,
     };
@@ -326,7 +336,7 @@ const RequestsPage = (props: RequestsPageProps) => {
   const includePrompt = valuesColumns.length > 0;
   const [selected, setSelected] = useState<"left" | "right">("left");
   const isPreview = selected === "left";
-  const trunc = isPreview ? 100 : 10000;
+  const trunc = isPreview ? 20 : 10000;
 
   const expanded_columns = ["request", "response", "label"]
 
@@ -445,7 +455,7 @@ const RequestsPage = (props: RequestsPageProps) => {
               fileName="requests.csv"
               selected={selected}
               setSelected={setSelected}
-              filterMap={RequestsTableFilter}
+              filterMap={filterMap}
               onAdvancedFilter={(_filters) => {
                 router.query.page = "1";
                 router.push(router);
@@ -482,6 +492,7 @@ const RequestsPage = (props: RequestsPageProps) => {
                 onPageChangeHandler={onPageChangeHandler}
                 onPageSizeChangeHandler={onPageSizeChangeHandler}
                 selected={selected}
+                isTableRowOnClickDisabled={isTableRowOnClickDisabled}
               />
             )}
           </div>
