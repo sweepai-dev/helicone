@@ -165,7 +165,6 @@ const RequestDrawer = (props: RequestDrawerProps) => {
         </div>
         <ThumbsUpDown name="hi" selected={thumbs[index] || undefined} setSelected={setThumbs} id={index} />
       </div>
-      <ArrowButtons />
       <div className="flex justify-end">
   {feedbackFinal !== "" && <div className="w-1/3">
     <div className="flex flex-col text-left space-y-1">
@@ -176,6 +175,7 @@ const RequestDrawer = (props: RequestDrawerProps) => {
     </div>
   </div>}
 </div>
+      <ArrowButtons />
 
     </ThemedDrawer>);
 };
