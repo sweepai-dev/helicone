@@ -64,10 +64,6 @@ export default function ThemedTextDropDown(props: ThemedTextDropDownProps) {
             </Combobox.Options>
           )}
         </div>
-
-        {value !== "" && filteredPeople.length === 0 && (
-          <p className="p-4 text-sm text-gray-500">nothing found.</p>
-        )}
       </Combobox>
     </div>
   );

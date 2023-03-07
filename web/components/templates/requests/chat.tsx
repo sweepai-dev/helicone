@@ -1,6 +1,8 @@
 import { UserCircleIcon, UserIcon } from "@heroicons/react/24/outline";
 import Image from "next/image";
 import { clsx } from "../../shared/clsx";
+import FeedbackTooltip from "./feedbackTooltip";
+import Hover from "./hover";
 import { ChatProperties, CsvData } from "./requestsPage";
 
 interface ChatProps {
@@ -19,35 +21,33 @@ export interface Result {
     error: string | null;
 }
 
-function formatPrompt(prompt: Prompt): Result {
-    console.log("PROMPT IN FORMATTER", prompt)
-    let formattedString = prompt.prompt;
+export function formatPrompt(prompt: Prompt): Result {
     const missingValues = [];
-
-    for (const key in prompt.values) {
-        console.log("KEY", key)
-        const placeholder = new RegExp(`{{${key}}}`, 'g');
-        if (!formattedString.includes(`{{${key}}}`)) {
-            missingValues.push(key);
-        } else {
-            console.log("KEY REPLACING", key)
-            formattedString = formattedString.replace(placeholder, `<span class="text-red-500">${prompt.values[key]}</span>`);
+    let formattedString = prompt.prompt;
+    const elements = formattedString.split(/({{[^}]+}})/g).map((part) => {
+      const match = part.match(/{{([^}]+)}}/);
+      if (match) {
+        const key = match[1];
+        const value = prompt.values[key];
+        if (value === undefined) {
+          missingValues.push(key);
+          return null;
         }
-    }
-
-    const regex = /{{([^{}]+)}}/g;
-    let match = regex.exec(formattedString);
-    const missingPlaceholders = [];
-
-    while (match) {
-        if (!prompt.values.hasOwnProperty(match[1])) {
-            missingPlaceholders.push(match[1]);
-        }
-        match = regex.exec(formattedString);
-    }
+        return <Hover value={value} name={key} />;
+      }
+      return part;
+    });
+  
+    const output = (
+      <div>
+        <p>
+          {elements}
+        </p>
+      </div>
+    );
 
     return {
-        data: <div dangerouslySetInnerHTML={{ __html: formattedString }} />,
+        data: <div>{output}</div>,
         error: null,
     };
 }
@@ -85,7 +85,6 @@ export const Chat = (props: ChatProps) => {
                 prompt: message.content,
                 values: keys,
             }).data;
-            console.log("FORMATTED PROMPT", formattedMessageContent)
           } else {
             formattedMessageContent = message.content;
           }

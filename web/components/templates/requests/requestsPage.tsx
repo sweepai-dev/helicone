@@ -29,6 +29,7 @@ import { Chat } from "./chat";
 import { Completion } from "./completion";
 import { CompletionRegex } from "./completionRegex";
 import { ThumbsUpDown } from "./feedback";
+import FeedbackTooltip from "./feedbackTooltip";
 import RequestDrawer from "./requestDrawer";
 import useRequestsPage from "./useRequestsPage";
 
@@ -71,8 +72,11 @@ interface RequestsPageProps {
 }
 
 export function capitalizeWords(str: string): string {
+  // replace underscores with spaces
+  const strWithSpaces = str.replace(/_/g, " ");
+
   // split the string into an array of words
-  const words = str.split(" ");
+  const words = strWithSpaces.split(" ");
 
   // map over each word and capitalize the first letter
   const capitalizedWords = words.map(word => word.charAt(0).toUpperCase() + word.slice(1));
@@ -299,12 +303,13 @@ const RequestsPage = (props: RequestsPageProps) => {
       request_user_id: d.request_user_id ?? "",
       model: d.response_body?.model ?? "",
       temperature: d.request_body?.temperature ?? null,
-      prompt_name: d.prompt_name ?? "",
+      prompt_name: is_moderation ? "Moderation" : (d.prompt_name ?? ""),
       isCached: d.is_cached ?? false,
       isChat: is_chat,
       isModeration: is_moderation,
       moderationFullResponse: moderationFullResponse,
       chatProperties: chatProperties,
+      // flagged: is_moderation && d.response_body?.results[0].flagged == true,
       ...updated_request_properties,
     };
   });
@@ -321,7 +326,7 @@ const RequestsPage = (props: RequestsPageProps) => {
   const propertiesColumns = properties.map((p) => {
     return {
       key: p,
-      label: p,
+      label: capitalizeWords(p),
       format: (value: string) => (value ? truncString(value, 15) : value),
     };
   });
@@ -342,13 +347,13 @@ const RequestsPage = (props: RequestsPageProps) => {
   const expanded_columns = ["request", "response", "label"]
 
   let columns: Column[] = [
-    {
+    !isPreview ? {
       key: "label",
       label: "Label",
       minWidth: 30,
       type: "text",
       format: (value: any) => value,
-    }, 
+    } : null, 
     {
       key: "time",
       label: "Time",
@@ -357,27 +362,28 @@ const RequestsPage = (props: RequestsPageProps) => {
       type: "date",
       format: (value: string) => getUSDate(value),
     },
-    includePrompt
-      ? {
-          key: "prompt_name",
-          label: "Name",
-          format: (value: string) => value,
-          type: "text",
-          filter: true,
-        }
-      : null,
+    ...propertiesColumns,
+    // includePrompt
+    //   ? {
+    //       key: "prompt_name",
+    //       label: "Name",
+    //       format: (value: string) => value,
+    //       type: "text",
+    //       filter: true,
+    //     }
+    //   : null,
     {
       key: "request",
       label: "Request",
-      minWidth: 600,
+      minWidth: 100,
       type: "text",
       format: (value: string) => (value ? truncString(value, trunc) : value),
     },
-    ...valuesColumns,
+    // ...valuesColumns,
     {
       key: "response",
       label: "Response",
-      minWidth: 300,
+      minWidth: 200,
       type: "text",
       format: (value: string) => (value ? truncString(value, trunc) : value),
     },
@@ -394,20 +400,19 @@ const RequestsPage = (props: RequestsPageProps) => {
       type: "number",
       filter: true,
     },
-    {
-      key: "logprobs",
-      label: "Log Prob",
-      type: "number",
-      filter: true,
-    },
-    {
-      key: "request_user_id",
-      label: "User",
-      format: (value: string) => (value ? truncString(value, 15) : value),
-      type: "text",
-      filter: true,
-    },
-    ...propertiesColumns,
+    // {
+    //   key: "logprobs",
+    //   label: "Log Prob",
+    //   type: "number",
+    //   filter: true,
+    // },
+    // {
+    //   key: "request_user_id",
+    //   label: "User",
+    //   format: (value: string) => (value ? truncString(value, 15) : value),
+    //   type: "text",
+    //   filter: true,
+    // },
     {
       key: "model",
       label: "Model",
@@ -415,12 +420,12 @@ const RequestsPage = (props: RequestsPageProps) => {
       type: "text",
       minWidth: 170,
     },
-    {
-      key: "isCached",
-      label: "Cache",
-      minWidth: 170,
-      format: (value: boolean) => (value ? "hit" : ""),
-    },
+    // {
+    //   key: "isCached",
+    //   label: "Cache",
+    //   minWidth: 170,
+    //   format: (value: boolean) => (value ? "hit" : ""),
+    // },
   ].filter((column) => (column !== null) && (selected == "left" || (expanded_columns.includes(column.key)))) as Column[];
   const router = useRouter();
 

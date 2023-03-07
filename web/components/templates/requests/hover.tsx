@@ -7,7 +7,9 @@ interface Props {
 }
 
 const Hover: React.FC<Props> = ({ value, name }) => {
+    const originIsShrunk: boolean = value.length > 150 ? true : false;
   const [isHovering, setIsHovering] = useState(false);
+  const [isShrunk, setIsShrunk] = useState(originIsShrunk);
 
   const handleMouseOver = () => {
     setIsHovering(true);
@@ -15,6 +17,10 @@ const Hover: React.FC<Props> = ({ value, name }) => {
 
   const handleMouseOut = () => {
     setIsHovering(false);
+  };
+
+  const handleClick = () => {
+    setIsShrunk(!isShrunk);
   };
 
   const tooltipClasses = `text-center tooltip bg-black text-white rounded-md px-2 py-1 text-sm absolute bottom-full left-1/2 transform -translate-x-1/2 transition-transform duration-200 ease-in-out ${isHovering ? 'opacity-100 visible mt-4' : 'opacity-0 invisible'}`;
@@ -25,8 +31,13 @@ const Hover: React.FC<Props> = ({ value, name }) => {
       className={spanClasses}
       onMouseOver={handleMouseOver}
       onMouseOut={handleMouseOut}
+      onClick={handleClick}
     >
-      {value}
+      {isShrunk ? (
+        <button className="font-semibold bg-red-200 hover:bg-red-300">[{capitalizeWords(name)}]</button>
+      ) : (
+        <span className="cursor-pointer">{value}</span>
+      )}
       {isHovering && (
         <span className={tooltipClasses}>{capitalizeWords(name)}</span>
       )}

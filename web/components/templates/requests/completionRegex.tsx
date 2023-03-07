@@ -45,20 +45,6 @@ function formatPrompt(prompt: Prompt): Result {
         </p>
       </div>
     );
-  
-    
-    console.log("FORMATTED STRING", formattedString)
-
-    // const regex = /{{([^{}]+)}}/g;
-    // let match = regex.exec(formattedString);
-    // const missingPlaceholders = [];
-
-    // while (match) {
-    //     if (!prompt.values.hasOwnProperty(match[1])) {
-    //         missingPlaceholders.push(match[1]);
-    //     }
-    //     match = regex.exec(formattedString);
-    // }A
 
     return {
         data: <div>{output}</div>,

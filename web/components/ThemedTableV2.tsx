@@ -21,7 +21,7 @@ export interface Column {
   sortBy?: string;
   minWidth?: number;
   align?: "center" | "inherit" | "left" | "right" | "justify";
-  format?: (value: any) => string;
+  format?: (value: any) => string | JSX.Element;
 }
 
 interface ThemedTableV2Props {
@@ -149,7 +149,7 @@ export default function ThemedTableV2(props: ThemedTableV2Props) {
                             className={clsx(
                               condensed ? "py-1" : "",
                               idx === 0 ? " text-black font-medium" : "text-gray-500 font-normal",
-                              "font-sans text-sm"
+                              "font-sans text-sm max-w-[600px]"
                             )}
                           >
                             {column.format ? column.format(value) : value}
