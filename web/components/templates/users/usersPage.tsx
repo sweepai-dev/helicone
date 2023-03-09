@@ -75,6 +75,7 @@ const UsersPage = (props: UsersPageProps) => {
       .toLocaleTimeString()
       .slice(-2)}`;
   };
+  console.log(users);
 
   const columns: Column[] = [
     {
@@ -82,7 +83,7 @@ const UsersPage = (props: UsersPageProps) => {
       label: "Id",
       type: "text",
       filter: true,
-      minWidth: 170,
+      minWidth: 240,
       format: (value: string) =>
         value ? truncString(value, 10) : "No user ID",
     },
@@ -105,7 +106,7 @@ const UsersPage = (props: UsersPageProps) => {
       label: "Requests",
       type: "number",
       filter: true,
-      format: (value: string) => Number(value).toFixed(2),
+      format: (value: string) => value,
     },
     {
       key: "average_requests_per_day_active",
