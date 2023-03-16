@@ -20,7 +20,9 @@ import {
 import { Database } from "../../../supabase/database.types";
 import AuthHeader from "../../shared/authHeader";
 import LoadingAnimation from "../../shared/loadingAnimation";
-import ThemedTableHeader from "../../shared/themed/themedTableHeader";
+import ThemedTableHeader, {
+  Filter,
+} from "../../shared/themed/themedTableHeader";
 import { capitalizeWords, getUSDate } from "../../shared/utils/utils";
 import ThemedTableV2, { Column } from "../../ThemedTableV2";
 import { Filters } from "../dashboard/filters";
@@ -202,23 +204,49 @@ const RequestsPage = (props: RequestsPageProps) => {
     typeof window !== "undefined"
       ? localStorage.getItem("requestsColumns")
       : null;
+  const localStorageFilters =
+    typeof window !== "undefined"
+      ? localStorage.getItem("requestsFilters")
+      : null;
 
-  const parsed = JSON.parse(localStorageColumns || "[]") as Column[];
+  const parsedColumns = JSON.parse(localStorageColumns || "[]") as Column[];
+  const parsedFilters = JSON.parse(localStorageFilters || "[]") as Filter[];
 
-  if (parsed) {
-    initialColumns.forEach((column) => {
-      const match = parsed.find((c) => c.key === column.key);
-      if (match) {
-        column.active = match.active;
-      }
-    });
-  }
+  initialColumns.forEach((column) => {
+    const match = parsedColumns.find((c) => c.key === column.key);
+    if (match) {
+      column.active = match.active;
+    }
+  });
+
+  const reduceFilter = (_filter: Filter[]): FilterNode => {
+    const filters = _filter.filter((f) => f) as FilterNode[];
+    if (filters.length === 0) {
+      return "all";
+    } else {
+      const firstFilter = filters[0];
+      const reducedFilter = filters.slice(1).reduce((acc, curr) => {
+        return {
+          left: acc,
+          operator: "and",
+          right: curr,
+        };
+      }, firstFilter);
+
+      return reducedFilter;
+    }
+  };
 
   const [defaultColumns, setDefaultColumns] =
     useState<Column[]>(initialColumns);
   const [currentPage, setCurrentPage] = useState<number>(page);
   const [currentPageSize, setCurrentPageSize] = useState<number>(pageSize);
-  const [advancedFilter, setAdvancedFilter] = useState<FilterNode>("all");
+  const [advancedFilter, setAdvancedFilter] = useState<FilterNode>(
+    reduceFilter(parsedFilters)
+  );
+  const [advancedFilterArray, setAdvancedFilterArray] =
+    useState<Filter[]>(parsedFilters);
+
   const [orderBy, setOrderBy] = useState<{
     column: keyof RequestWrapper;
     direction: SortDirection;
@@ -426,6 +454,11 @@ const RequestsPage = (props: RequestsPageProps) => {
                   router.query.page = "1";
                   router.push(router);
                   const filters = _filters.filter((f) => f) as FilterNode[];
+                  localStorage.setItem(
+                    "requestsFilters",
+                    JSON.stringify(filters)
+                  );
+                  setAdvancedFilterArray(_filters);
                   if (filters.length === 0) {
                     setAdvancedFilter("all");
                   } else {
@@ -443,6 +476,7 @@ const RequestsPage = (props: RequestsPageProps) => {
                     setAdvancedFilter(reducedFilter);
                   }
                 },
+                initialFilters: advancedFilterArray,
               }}
               view={{
                 viewMode,

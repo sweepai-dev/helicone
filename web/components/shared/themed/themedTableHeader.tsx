@@ -69,6 +69,7 @@ interface ThemedHeaderProps {
   advancedFilter?: {
     filterMap: TableFilterMap;
     onAdvancedFilter: (advancedFilters: Filter[]) => void;
+    initialFilters?: Filter[];
   };
   view?: {
     viewMode: string;
@@ -86,7 +87,9 @@ export default function ThemedHeader(props: ThemedHeaderProps) {
     view,
   } = props;
 
-  const [advancedFilters, setAdvancedFilters] = useState<Filter[]>([]);
+  const [advancedFilters, setAdvancedFilters] = useState<Filter[]>(
+    advancedFilter?.initialFilters || []
+  );
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   return (
@@ -318,7 +321,7 @@ export default function ThemedHeader(props: ThemedHeaderProps) {
           >
             <div className="text-sm text-gray-500">Filters</div>
             <div className="space-y-4 ml-0 sm:ml-4">
-              {advancedFilter.filterMap && (
+              {advancedFilter && (
                 <AdvancedFilters
                   filterMap={advancedFilter.filterMap}
                   filters={advancedFilters}
@@ -345,7 +348,7 @@ export default function ThemedHeader(props: ThemedHeaderProps) {
               <button
                 onClick={() => {
                   setAdvancedFilters([]);
-                  advancedFilter.onAdvancedFilter(advancedFilters);
+                  advancedFilter.onAdvancedFilter([]);
                 }}
                 className={clsx(
                   "relative inline-flex items-center rounded-md hover:bg-gray-50 bg-white px-4 py-2 text-sm font-medium text-gray-700"
@@ -380,6 +383,7 @@ function AdvancedFilters({
   filters: Filter[];
   setAdvancedFilters: Dispatch<SetStateAction<Filter[]>>;
 }) {
+  console.log(filters); // TODO: JUSTIN START HERE
   return (
     <div className="space-y-4">
       {filters.map((_filter, index) => {
