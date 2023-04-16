@@ -16,9 +16,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const gpt3_tokenizer_1 = __importDefault(require("gpt3-tokenizer"));
 const express_1 = __importDefault(require("express"));
 const app = (0, express_1.default)();
-app.use(express_1.default.text());
+app.use(express_1.default.text({ type: "text/plain" }));
 app.post("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const text = req.body;
+    if (typeof text !== "string") {
+        res.status(400).send("Bad request");
+        return;
+    }
     const tokenizer = new gpt3_tokenizer_1.default({ type: "gpt3" });
     const encoded = tokenizer.encode(text);
     const tokenCount = encoded.bpe.length;
