@@ -1,10 +1,12 @@
 import { Env } from ".";
+import { createClient } from "@supabase/supabase-js";
 
 export interface RateLimitOptions {
   time_window: number;
   segment: string | undefined;
   quota: number;
   unit: "token" | "request" | "dollar";
+  policy: string;
 }
 
 export interface RateLimitResponse {
@@ -33,6 +35,7 @@ function parsePolicy(input: string): RateLimitOptions {
     time_window,
     unit: unit || "request",
     segment,
+    policy: input,
   };
 }
 
@@ -178,4 +181,97 @@ export async function updateRateLimitCounter(
   await env.RATE_LIMIT_KV.put(kvKey, JSON.stringify(prunedTimestamps), {
     expirationTtl: Math.ceil(timeWindowMillis / 1000), // Convert timeWindowMillis to seconds for expirationTtl
   });
+}
+
+export function generateRateLimitHeaders(
+  rateLimitCheckResult: RateLimitResponse,
+  rateLimitOptions: RateLimitOptions
+): { [key: string]: string } {
+  const policy = `${rateLimitOptions.quota};w=${rateLimitOptions.time_window};u=${rateLimitOptions.unit}`;
+  const headers: { [key: string]: string } = {
+    "Helicone-RateLimit-Limit": rateLimitCheckResult.limit.toString(),
+    "Helicone-RateLimit-Remaining": rateLimitCheckResult.remaining.toString(),
+    "Helicone-RateLimit-Policy": policy,
+  };
+
+  if (rateLimitCheckResult.reset !== undefined) {
+    headers["Helicone-RateLimit-Reset"] = rateLimitCheckResult.reset.toString();
+  }
+
+  return headers;
+}
+
+export async function(
+  request: Request,
+  env: Env,
+  rateLimitOptions: RateLimitOptions,
+  requestId: string,
+  requestBody: { user: string | undefined, stream: boolean | undefined }
+
+): Promise<Response> {
+  const auth = request.headers.get("Authorization");
+
+  if (auth === null) {
+    return new Response("No authorization header found!", {
+      status: 401,
+    });
+  }
+
+  const hashedKey = await hash(auth);
+  const rateLimitCheckResult = await checkRateLimit(
+    request,
+    env,
+    rateLimitOptions,
+    hashedKey,
+    requestBody.user
+  );
+
+  const additionalHeaders = generateRateLimitHeaders(
+    rateLimitCheckResult,
+    rateLimitOptions
+  );
+
+  await recordRateLimit(rateLimitOptions.policy, requestId, rateLimitCheckResult, env);
+
+  if (rateLimitCheckResult.status === "rate_limited") {
+    return new Response(
+      JSON.stringify({
+        message:
+          "Rate limit reached. Please wait before making more requests.",
+      }),
+      {
+        status: 429,
+        headers: {
+          "content-type": "application/json;charset=UTF-8",
+          ...additionalHeaders,
+        },
+      }
+    );
+  }
+}
+
+export async function recordRateLimit(
+  policy: string,
+  requestId: string, 
+  rateLimitResponse: RateLimitResponse, 
+  env: Env
+): Promise<void> {
+  const dbClient = createClient(
+    env.SUPABASE_URL,
+    env.SUPABASE_SERVICE_ROLE_KEY
+  );
+  const { error } = await dbClient
+    .from("rate_limits")
+    .insert({
+      request_id: requestId,
+      policy,
+      status: rateLimitResponse.status,
+      limit: rateLimitResponse.limit,
+      remaining: rateLimitResponse.remaining,
+      reset: rateLimitResponse.reset,
+    });
+
+  if (error) {
+    console.error(error);
+  }
 }

@@ -1,12 +1,13 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
-import { EventEmitter } from "events";
-import { Database } from "../supabase/database.types";
 import { getCacheSettings } from "./cache";
-import { ClickhouseEnv, dbInsertClickhouse } from "./clickhouse";
-import { once } from "./helpers";
-import { readAndLogResponse } from "./logResponse";
 import { extractPrompt, Prompt } from "./prompt";
 import { handleLoggingEndpoint, isLoggingEndpoint } from "./properties";
+import {
+  forwardRequestToOpenAiWithRetry,
+  getRetryOptions,
+  RetryOptions,
+} from "./retry";
+import GPT3Tokenizer from "gpt3-tokenizer";
 import {
   checkRateLimit,
   getRateLimitOptions,
@@ -14,21 +15,26 @@ import {
   RateLimitResponse,
   updateRateLimitCounter,
 } from "./rateLimit";
-import { Result } from "./results";
-import {
-  forwardRequestToOpenAiWithRetry,
-  getRetryOptions,
-  RetryOptions,
-} from "./retry";
+import { EventEmitter } from "events";
+import { once } from "./helpers";
+import { Database } from "../supabase/database.types";
+
+// import bcrypt from "bcrypt";
 
 export interface Env {
   SUPABASE_SERVICE_ROLE_KEY: string;
   SUPABASE_URL: string;
   TOKENIZER_COUNT_API: string;
   RATE_LIMIT_KV: KVNamespace;
-  CLICKHOUSE_HOST: string;
-  CLICKHOUSE_USER: string;
-  CLICKHOUSE_PASSWORD: string;
+}
+
+interface SuccessResult<T> {
+  data: T;
+  error: null;
+}
+interface ErrorResult<T> {
+  data: null;
+  error: T;
 }
 
 export interface RequestSettings {
@@ -38,6 +44,8 @@ export interface RequestSettings {
   ff_stream_force_format?: boolean;
   ff_increase_timeout?: boolean;
 }
+
+export type Result<T, K> = SuccessResult<T> | ErrorResult<K>;
 
 export async function forwardRequestToOpenAi(
   request: Request,
@@ -205,15 +213,7 @@ async function logRequest({
   prompt,
   promptName,
   heliconeApiKey,
-}: HeliconeRequest): Promise<
-  Result<
-    {
-      request: Database["public"]["Tables"]["request"]["Row"];
-      properties: Database["public"]["Tables"]["properties"]["Row"][];
-    },
-    string
-  >
-> {
+}: HeliconeRequest): Promise<Result<string, string>> {
   try {
     const json = body ? JSON.parse(body) : {};
     const jsonUserId = json.user;
@@ -261,14 +261,14 @@ async function logRequest({
           helicone_api_key_id: heliconeUserId?.id,
         },
       ])
-      .select("*")
+      .select("id")
       .single();
 
     if (error !== null) {
       return { data: null, error: error.message };
     } else {
       // Log custom properties and then return request id
-      const customPropertyRows = Object.entries(properties ?? {}).map(
+      const customProperties = Object.entries(properties ?? {}).map(
         (entry) => ({
           request_id: requestId,
           auth_hash: hashed_auth,
@@ -277,21 +277,9 @@ async function logRequest({
           value: entry[1],
         })
       );
+      await dbClient.from("properties").insert(customProperties).select();
 
-      const customProperties =
-        customPropertyRows.length > 0
-          ? (
-              await dbClient
-                .from("properties")
-                .insert(customPropertyRows)
-                .select("*")
-            ).data ?? []
-          : [];
-
-      return {
-        data: { request: data, properties: customProperties },
-        error: null,
-      };
+      return { data: data.id, error: null };
     }
   } catch (e) {
     return { data: null, error: JSON.stringify(e) };
@@ -342,6 +330,269 @@ function removeHeliconeHeaders(request: Headers): Headers {
   return newHeaders;
 }
 
+async function getTokenCount(inputText: string): Promise<number> {
+  const tokenizer = new GPT3Tokenizer({ type: "gpt3" }); // or 'codex'
+  const encoded: { bpe: number[]; text: string[] } =
+    tokenizer.encode(inputText);
+  return encoded.bpe.length;
+}
+
+function getRequestString(requestBody: any): [string, number] {
+  if (requestBody.prompt !== undefined) {
+    const prompt = requestBody.prompt;
+    if (typeof prompt === "string") {
+      return [requestBody.prompt, 0];
+    } else if ("length" in prompt) {
+      return [(prompt as string[]).join(""), 0];
+    } else {
+      throw new Error("Invalid prompt type");
+    }
+  } else if (requestBody.messages !== undefined) {
+    const messages = requestBody.messages as { content: string }[];
+
+    return [messages.map((m) => m.content).join(""), 3 + messages.length * 5];
+  } else {
+    throw new Error(`Invalid request body:\n${JSON.stringify(requestBody)}`);
+  }
+}
+
+function getResponseText(responseBody: any): string {
+  type Choice =
+    | {
+        delta: {
+          content: string;
+        };
+      }
+    | {
+        text: string;
+      };
+  if (responseBody.choices !== undefined) {
+    const choices = responseBody.choices;
+    return (choices as Choice[])
+      .map((c) => {
+        if ("delta" in c) {
+          return c.delta.content;
+        } else if ("text" in c) {
+          return c.text;
+        } else {
+          throw new Error("Invalid choice type");
+        }
+      })
+      .join("");
+  } else {
+    throw new Error(`Invalid response body:\n${JSON.stringify(responseBody)}`);
+  }
+}
+
+function consolidateTextFields(responseBody: any[]): any {
+  try {
+    const consolidated = responseBody.reduce((acc, cur) => {
+      if (!cur) {
+        return acc;
+      } else if (acc.choices === undefined) {
+        return cur;
+      } else {
+        return {
+          ...acc,
+          choices: acc.choices.map((c: any, i: number) => {
+            if (!cur.choices) {
+              return c;
+            } else if (
+              c.delta !== undefined &&
+              cur.choices[i]?.delta !== undefined
+            ) {
+              return {
+                delta: {
+                  ...c.delta,
+                  content: c.delta.content
+                    ? c.delta.content + (cur.choices[i].delta.content ?? "")
+                    : cur.choices[i].delta.content,
+                },
+              };
+            } else if (
+              c.text !== undefined &&
+              cur.choices[i]?.text !== undefined
+            ) {
+              return {
+                ...c,
+                text: c.text + (cur.choices[i].text ?? ""),
+              };
+            } else {
+              return c;
+            }
+          }),
+        };
+      }
+    }, {});
+
+    consolidated.choices = consolidated.choices.map((c: any) => {
+      if (c.delta !== undefined) {
+        return {
+          ...c,
+          // delta: undefined,
+          message: {
+            ...c.delta,
+            content: c.delta.content,
+          },
+        };
+      } else {
+        return c;
+      }
+    });
+    return consolidated;
+  } catch (e) {
+    console.error("Error consolidating text fields", e);
+    return responseBody[0];
+  }
+}
+
+async function parseResponse(
+  requestSettings: RequestSettings,
+  responseBody: string,
+  responseStatus: number
+): Promise<Result<any, string>> {
+  const result = responseBody;
+  try {
+    if (!requestSettings.stream || responseStatus !== 200) {
+      return {
+        data: JSON.parse(result),
+        error: null,
+      };
+    } else {
+      const lines = result.split("\n").filter((line) => line !== "");
+      const data = lines.map((line, i) => {
+        if (i === lines.length - 1) return {};
+        return JSON.parse(line.replace("data:", ""));
+      });
+
+      try {
+        return {
+          data: {
+            ...consolidateTextFields(data),
+            streamed_data: data,
+          },
+          error: null,
+        };
+      } catch (e) {
+        return {
+          data: {
+            streamed_data: data,
+          },
+          error: null,
+        };
+      }
+    }
+  } catch (e) {
+    return {
+      data: null,
+      error: "error parsing response, " + e + ", " + result,
+    };
+  }
+}
+
+async function readAndLogResponse(
+  requestSettings: RequestSettings,
+  responseBody: string,
+  requestId: string,
+  dbClient: SupabaseClient<Database>,
+  requestBody: any,
+  responseStatus: number,
+  startTime: Date,
+  wasTimeout: boolean
+): Promise<void> {
+  const { data: insertData, error: insertError } = await dbClient
+    .from("response")
+    .insert([
+      {
+        request: requestId,
+        delay_ms: new Date().getTime() - startTime.getTime(),
+        body: {},
+        status: -1,
+      },
+    ])
+    .select("id")
+    .single();
+  if (insertError !== null) {
+    console.error(insertError);
+    return;
+  }
+
+  const responseResult = await parseResponse(
+    requestSettings,
+    responseBody,
+    responseStatus
+  );
+  if (responseResult.data !== null) {
+    const { data, error } = await dbClient
+      .from("response")
+      .update({
+        request: requestId,
+        body: responseResult.data,
+        status: responseStatus,
+        completion_tokens: responseResult.data.usage?.completion_tokens,
+        prompt_tokens: responseResult.data.usage?.prompt_tokens,
+      })
+      .eq("id", insertData.id)
+      .select("id");
+    if (error !== null) {
+      console.error(error);
+    } else {
+      console.log(data);
+    }
+  } else {
+    console.error(responseResult.error);
+  }
+
+  if (
+    requestSettings.stream &&
+    !responseResult.data.usage?.completion_tokens &&
+    responseResult.data?.streamed_data
+  ) {
+    const streamed_data: any[] = responseResult.data.streamed_data;
+    const responseTokenCount = await getTokenCount(
+      streamed_data
+        .filter((d) => "id" in d)
+        .map((d) => getResponseText(d))
+        .join("")
+    );
+    const [requestString, paddingTokenCount] = getRequestString(
+      JSON.parse(requestBody)
+    );
+    const requestTokenCount =
+      (await getTokenCount(requestString)) + paddingTokenCount;
+    const totalTokens = requestTokenCount + responseTokenCount;
+    if (isNaN(totalTokens)) {
+      throw new Error("Invalid token count");
+    }
+
+    const { data, error } = await dbClient
+      .from("response")
+      .update({
+        request: requestId,
+        body: {
+          ...responseResult.data,
+          usage: {
+            completion_tokens: responseTokenCount,
+            prompt_tokens: requestTokenCount,
+            total_tokens: totalTokens,
+            helicone_calculated: true,
+          },
+        },
+        delay_ms: new Date().getTime() - startTime.getTime(),
+        status: responseStatus,
+        completion_tokens: responseTokenCount,
+        prompt_tokens: requestTokenCount,
+      })
+      .eq("id", insertData.id)
+      .select("id");
+    if (error !== null) {
+      console.error(error);
+    } else {
+      console.log(data);
+    }
+  }
+}
+
 async function ensureApiKeyAddedToAccount(
   useId: string,
   openAIApiKeyHash: string,
@@ -362,71 +613,18 @@ async function ensureApiKeyAddedToAccount(
   );
 }
 
-function formatTimeString(timeString: string): string {
-  return new Date(timeString).toISOString().replace("Z", "");
-}
-
-async function logInClickhouse(
-  request: Database["public"]["Tables"]["request"]["Row"],
-  response: Database["public"]["Tables"]["response"]["Row"],
-  properties: Database["public"]["Tables"]["properties"]["Row"][],
-  env: ClickhouseEnv
-) {
-  return Promise.all([
-    dbInsertClickhouse(env, "response_copy_v1", [
-      {
-        auth_hash: request.auth_hash,
-        user_id: request.user_id,
-        request_id: request.id,
-        completion_tokens: response.completion_tokens,
-        latency: response.delay_ms,
-        model: ((response.body as any)?.model as string) || null,
-        prompt_tokens: response.prompt_tokens,
-        request_created_at: formatTimeString(request.created_at),
-        response_created_at: formatTimeString(response.created_at),
-        response_id: response.id,
-        status: response.status,
-      },
-    ]),
-    dbInsertClickhouse(
-      env,
-      "properties_copy_v1",
-      properties.map((p) => ({
-        key: p.key,
-        value: p.value,
-        user_id: p.user_id,
-        auth_hash: request.auth_hash,
-        request_id: request.id,
-        created_at: p.created_at ? formatTimeString(p.created_at) : null,
-        id: p.id,
-      }))
-    ),
-  ]);
-}
-
-async function forwardAndLog(
+async function forwardRequest(
+  request: Request,
   requestSettings: RequestSettings,
   body: string,
-  request: Request,
-  env: Env,
-  ctx: ExecutionContext,
-  retryOptions?: RetryOptions,
-  prompt?: Prompt
+  retryOptions?: RetryOptions
 ): Promise<Response> {
-  const auth = request.headers.get("Authorization");
-  if (auth === null) {
-    return new Response("No authorization header found!", { status: 401 });
-  }
-  const startTime = new Date();
-
-  const response = await (retryOptions
-    ? forwardRequestToOpenAiWithRetry(
-        request,
-        requestSettings,
-        retryOptions,
-        body
-      )
+  return await (retryOptions
+    ? forwardRequestToOpenAiWithRetry(request, requestSettings, retryOptions, body)
     : forwardRequestToOpenAi(request, requestSettings, body, retryOptions));
+}
+
+function createLoggingTransformStream(): [TransformStream, EventEmitter, Promise<string>, string] {
   const chunkEmitter = new EventEmitter();
   const responseBodySubscriber = once(chunkEmitter, "done");
   const decoder = new TextDecoder();
@@ -440,32 +638,50 @@ async function forwardAndLog(
       chunkEmitter.emit("done", globalResponseBody);
     },
   });
-  let readable = response.body?.pipeThrough(loggingTransformStream);
 
-  if (requestSettings.ff_stream_force_format) {
-    let buffer: any = null;
-    const transformer = new TransformStream({
-      transform(chunk, controller) {
-        if (chunk.length < 50) {
-          buffer = chunk;
+  return [loggingTransformStream, chunkEmitter, responseBodySubscriber, globalResponseBody];
+}
+
+function handleStreamForceFormat(readable: ReadableStream<any> | undefined): ReadableStream<any> | undefined {
+  let buffer: any = null;
+  const transformer = new TransformStream({
+    transform(chunk, controller) {
+      if (chunk.length < 50) {
+        buffer = chunk;
+      } else {
+        if (buffer) {
+          const mergedArray = new Uint8Array(buffer.length + chunk.length);
+          mergedArray.set(buffer);
+          mergedArray.set(chunk, buffer.length);
+          controller.enqueue(mergedArray);
         } else {
-          if (buffer) {
-            const mergedArray = new Uint8Array(buffer.length + chunk.length);
-            mergedArray.set(buffer);
-            mergedArray.set(chunk, buffer.length);
-            controller.enqueue(mergedArray);
-          } else {
-            controller.enqueue(chunk);
-          }
-          buffer = null;
+          controller.enqueue(chunk);
         }
-      },
-    });
-    readable = readable?.pipeThrough(transformer);
-  }
+        buffer = null;
+      }
+    },
+  });
+  return readable?.pipeThrough(transformer);
+}
 
-  const requestId =
-    request.headers.get("Helicone-Request-Id") ?? crypto.randomUUID();
+function setHeliconeRequestId(request: Request): string {
+  return request.headers.get("Helicone-Request-Id") ?? crypto.randomUUID();
+}
+
+async function logRequestInfo(
+  ctx: ExecutionContext, 
+  env: Env, 
+  requestSettings: RequestSettings, 
+  request: Request, 
+  response: Response,
+  auth: string, 
+  body: string, 
+  requestId: string,
+  startTime: Date,
+  globalResponseBody: string,
+  responseBodySubscriber: Promise<string>,
+  prompt?: Prompt,
+): Promise<void> {
   async function responseBodyTimeout(delay_ms: number) {
     await new Promise((resolve) => setTimeout(resolve, delay_ms));
     console.log("response body timeout");
@@ -513,27 +729,59 @@ async function forwardAndLog(
       ]);
 
       if (requestResult.data !== null) {
-        const responseResult = await readAndLogResponse({
+        await readAndLogResponse(
           requestSettings,
           responseText,
-          requestId: requestResult.data.request.id,
+          requestResult.data,
           dbClient,
           requestBody,
           responseStatus,
           startTime,
-          wasTimeout,
-        });
-
-        if (responseResult.data !== null) {
-          await logInClickhouse(
-            requestResult.data.request,
-            responseResult.data,
-            requestResult.data.properties,
-            env
-          );
-        }
+          wasTimeout
+        );
       }
     })()
+  );
+}
+
+async function forwardAndLog(
+  requestSettings: RequestSettings,
+  body: string,
+  request: Request,
+  env: Env,
+  ctx: ExecutionContext,
+  retryOptions?: RetryOptions,
+  prompt?: Prompt
+): Promise<Response> {
+  const auth = request.headers.get("Authorization");
+  if (auth === null) {
+    return new Response("No authorization header found!", { status: 401 });
+  }
+  const startTime = new Date();
+
+  const response = await forwardRequest(request, requestSettings, body, retryOptions);
+
+  const [loggingTransformStream, _, responseBodySubscriber, globalResponseBody] = createLoggingTransformStream();
+  let readable = response.body?.pipeThrough(loggingTransformStream);
+  if (requestSettings.ff_stream_force_format) {
+    readable = handleStreamForceFormat(readable);
+  }
+
+  const requestId = setHeliconeRequestId(request);
+
+  await logRequestInfo(
+    ctx,
+    env,
+    requestSettings,
+    request,
+    response,
+    auth,
+    body,
+    requestId,
+    startTime,
+    globalResponseBody,
+    responseBodySubscriber,
+    prompt,
   );
 
   const responseHeaders = new Headers(response.headers);
@@ -722,6 +970,7 @@ export default {
       }
 
       const rateLimitOptions = getRateLimitOptions(request);
+      console.log("rate limit options", rateLimitOptions);
 
       const requestBody =
         request.method === "POST"
