@@ -1,6 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
 import { Env, Result, hash } from "./index";
-const cloneDeep = require('clone-deep');
 const MAX_CACHE_AGE = 60 * 60 * 24 * 365; // 365 days
 const DEFAULT_CACHE_AGE = 60 * 60 * 24 * 7; // 7 days
 const MAX_BUCKET_SIZE = 20;
@@ -185,7 +184,7 @@ export async function saveToCache(
     settings,
     env
   );
-  console.log("free indexes", freeIndexes)
+  console.log("free indexes", freeIndexes);
   if (freeIndexes.length > 0) {
     const cacheKey = await buildCachedRequest(request, freeIndexes[0]);
     const cacheResponse = new Response(responseClone.body, {
@@ -193,12 +192,12 @@ export async function saveToCache(
       headers: responseHeaders,
     });
 
-    await env.CACHE_KV.put(cacheKey, await serializeResponse(cacheResponse), {
-      expirationTtl: Math.ceil(ttl),
-    });
-    console.log("successfully added KV")
+    // await env.CACHE_KV.put(cacheKey, await serializeResponse(cacheResponse), {
+    //   expirationTtl: Math.ceil(ttl),
+    // });
+    console.log("successfully added KV");
   } else {
-    console.log("NO FREE INDEXES!!")
+    console.log("NO FREE INDEXES!!");
     throw new Error("No free indexes");
   }
 }
@@ -208,7 +207,7 @@ async function getMaxCachedResponses(
   { maxSize }: { maxSize: number },
   env: Env
 ): Promise<{ requests: Response[]; freeIndexes: number[] }> {
-  console.log("Startings get max cached responses")
+  console.log("Startings get max cached responses");
   const requests = await Promise.all(
     Array.from(Array(maxSize).keys()).map(async (idx) => {
       const cacheKey = await buildCachedRequest(request.clone(), idx);
@@ -218,13 +217,15 @@ async function getMaxCachedResponses(
         : undefined;
     })
   );
-  console.log("promise all finished")
+  console.log("promise all finished");
 
   function isResponse(obj: any): obj is Response {
-    return obj && typeof obj.prop1 === 'string' && typeof obj.prop2 === 'number';
+    return (
+      obj && typeof obj.prop1 === "string" && typeof obj.prop2 === "number"
+    );
     // Add other necessary property checks...
   }
-  console.log("IS RESPONSE?", isResponse(requests[0]))
+  console.log("IS RESPONSE?", isResponse(requests[0]));
 
   return {
     requests: requests.filter((r) => r !== undefined) as Response[],
@@ -244,7 +245,7 @@ export async function getCachedResponse(
     settings,
     env
   );
-  console.log("get maxed cached responses finished", freeIndexes)
+  console.log("get maxed cached responses finished", freeIndexes);
   if (freeIndexes.length === 0) {
     console.log("Returning cache hit");
     const cacheIdx = Math.floor(Math.random() * requestCaches.length);
@@ -255,13 +256,13 @@ export async function getCachedResponse(
       "Helicone-Cache-Bucket-Idx",
       cacheIdx.toString()
     );
-    console.log("yes returning a final created response!")
+    console.log("yes returning a final created response!");
     return new Response(randomCache.body, {
       ...randomCache,
       headers: cachedResponseHeaders,
     });
   } else {
-    console.log("hey ho, returning null...")
+    console.log("hey ho, returning null...");
     return null;
   }
 }
@@ -275,7 +276,7 @@ export async function recordCacheHit(
     console.error("No request id found in cache hit");
     return;
   }
-  console.log("RECORDING CACHE HIT")
+  console.log("RECORDING CACHE HIT");
   const dbClient = createClient(
     env.SUPABASE_URL,
     env.SUPABASE_SERVICE_ROLE_KEY
@@ -284,7 +285,7 @@ export async function recordCacheHit(
     .from("cache_hits")
     .insert({ request_id: requestId });
   if (error) {
-    console.log("ERROR IN CACHE HIT??")
+    console.log("ERROR IN CACHE HIT??");
     console.error(error);
   }
 }

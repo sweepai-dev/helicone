@@ -716,14 +716,17 @@ export default {
       if (cacheError !== null) {
         return new Response(cacheError, { status: 400 });
       }
-      console.log("this is the cache settings", cacheSettings)
+      console.log("this is the cache settings", cacheSettings);
       if (cacheSettings.shouldReadFromCache) {
         const cachedResponse = await getCachedResponse(
           request.clone(),
           cacheSettings.bucketSettings,
           env
         );
-        console.log("this is the actual cachedResponse I am returning", cachedResponse)
+        console.log(
+          "this is the actual cachedResponse I am returning",
+          cachedResponse
+        );
         if (cachedResponse) {
           ctx.waitUntil(recordCacheHit(cachedResponse.headers, env));
           return cachedResponse;
@@ -742,21 +745,25 @@ export default {
         retryOptions
       );
 
-      if (cacheSettings.shouldSaveToCache && requestClone && response.status == 200) {
-        ctx.waitUntil(
-          saveToCache(
-            requestClone,
-            response,
-            cacheSettings.cacheControl,
-            cacheSettings.bucketSettings,
-            env,
-            cacheSettings.ttl
-          )
-        );
+      if (
+        cacheSettings.shouldSaveToCache &&
+        requestClone &&
+        response.status == 200
+      ) {
+        // ctx.waitUntil(
+        //   saveToCache(
+        //     requestClone,
+        //     response,
+        //     cacheSettings.cacheControl,
+        //     cacheSettings.bucketSettings,
+        //     env,
+        //     cacheSettings.ttl
+        //   )
+        // );
       }
       const responseHeaders = new Headers(response.headers);
       if (cacheSettings.shouldReadFromCache) {
-        console.log("APPENDING MISS")
+        console.log("APPENDING MISS");
         responseHeaders.append("Helicone-Cache", "MISS");
       }
       Object.entries(additionalHeaders).forEach(([key, value]) => {
@@ -787,7 +794,7 @@ export default {
         headers: responseHeaders,
       });
     } catch (e) {
-      console.log("FOUND A HARDCORE ERROR!")
+      console.log("FOUND A HARDCORE ERROR!");
       console.error(e);
       return new Response(
         JSON.stringify({
