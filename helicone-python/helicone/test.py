@@ -7,8 +7,8 @@ from supabase import create_client
 import hashlib
 import pytest
 
-helicone.proxy_url = "http://127.0.0.1:8787/v1"
-helicone.api_key = os.getenv("HELICONE_API_KEY_LOCAL")
+helicone.proxy_url = "https://oai_staging.hconeai.com/v1"
+helicone.api_key = os.getenv("HELICONE_API_KEY")
 
 SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU"
 SUPABASE_URL = "http://localhost:54321"
@@ -170,8 +170,6 @@ def fetch_feedback(helicone_id):
 
 
 def test_log_feedback():
-    helicone.proxy_url = "http://127.0.0.1:8787/v1"
-    helicone.api_key = os.getenv("HELICONE_API_KEY_LOCAL")
     prompt = "Integration test for logging feedback"
 
     response = openai.Completion.create(
