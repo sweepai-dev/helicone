@@ -20,8 +20,6 @@ import LoadingAnimation from "../../shared/loadingAnimation";
 
 interface ModelPageProps {}
 
-type ModelMetrics = Database["public"]["Views"]["model_metrics"]["Row"];
-
 const ModelPage = (props: ModelPageProps) => {
   const client = useSupabaseClient<Database>();
   const { data, isLoading } = useQuery({

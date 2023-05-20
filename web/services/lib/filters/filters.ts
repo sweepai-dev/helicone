@@ -331,6 +331,18 @@ export async function buildFilterWithAuthClickHouseProperties(
   }));
 }
 
+export async function buildFilterWithAuthClickHouseProperties(
+  args: ExternalBuildFilterArgs & { org_id: string }
+): Promise<{ filter: string; argsAcc: any[] }> {
+  return buildFilterWithAuth(args, "clickhouse", (orgId) => ({
+    feedback_copy: {
+      organization_id: {
+        equals: orgId,
+      },
+    },
+  }));
+}
+
 export async function buildFilterWithAuth(
   args: ExternalBuildFilterArgs & {
     org_id: string;
