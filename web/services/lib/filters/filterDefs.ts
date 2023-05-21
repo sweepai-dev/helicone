@@ -103,6 +103,25 @@ type UserViewToOperators = {
 
 export type FilterLeafUserView = SingleKey<UserViewToOperators>;
 
+type FeedbackCopyToOperators = {
+  id: SingleKey<NumberOperators>;
+  created_at: SingleKey<TimestampOperators>;
+  response_id: SingleKey<TextOperators>;
+  boolean_value: SingleKey<TextOperators>;
+  float_value: SingleKey<NumberOperators>;
+  string_value: SingleKey<TextOperators>;
+  categorical_value: SingleKey<TextOperators>;
+  created_by: SingleKey<TextOperators>;
+  completion_tokens: SingleKey<NumberOperators>;
+  prompt_tokens: SingleKey<NumberOperators>;
+  model: SingleKey<TextOperators>;
+  organization_id: SingleKey<TextOperators>;
+  metric_name: SingleKey<TextOperators>;
+  metric_data_type: SingleKey<TextOperators>;
+};
+
+export type FilterLeafFeedbackCopy = SingleKey<FeedbackCopyToOperators>;
+
 type PropertiesCopyV1ToOperators = {
   auth_hash: SingleKey<TextOperators>;
   key: SingleKey<TextOperators>;
@@ -128,6 +147,7 @@ export type TablesAndViews = {
   users_view: FilterLeafUserView;
   properties_copy_v1: FilterLeafPropertiesTable;
   properties_copy_v2: FilterLeafPropertiesCopyV2;
+  feedback_copy: FilterLeafFeedbackCopy;
 };
 
 export type FilterLeaf = SingleKey<TablesAndViews>;

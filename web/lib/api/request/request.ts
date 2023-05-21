@@ -92,6 +92,8 @@ export async function getRequests(
   LIMIT ${limit}
   OFFSET ${offset}
 `;
+    console.log(builtFilter.filter, builtFilter.argsAcc)
+  console.log("QUERY", query)
 
   const { data, error } = await dbExecute<HeliconeRequest>(
     query,
@@ -113,21 +115,23 @@ export async function getRequestCount(
     argsAcc: [],
     filter,
   });
+  console.log("GET REQUEST COUNT REGULAR", builtFilter.filter, builtFilter.argsAcc)
 
   const query = `
   SELECT count(request.id)::bigint as count
   FROM request
     left join response on request.id = response.request
-    left join user_api_keys on user_api_keys.api_key_hash = request.auth_hash
     left join prompt on request.formatted_prompt_id = prompt.id
   WHERE (
     (${builtFilter.filter})
   )
   `;
+  console.log("QUERY", query)
   const { data, error } = await dbExecute<{ count: number }>(
     query,
     builtFilter.argsAcc
   );
+  console.log("RESULT:", data, error)
   if (error !== null) {
     return { data: null, error: error };
   }
@@ -138,11 +142,13 @@ export async function getRequestCountClickhouse(
   org_id: string,
   filter: FilterNode
 ): Promise<Result<number, string>> {
+  console.log("GET REQUEST COUNT")
   const builtFilter = await buildFilterWithAuthClickHouse({
     org_id,
     argsAcc: [],
     filter,
   });
+  console.log("GET REQUEST COUNT CLICKHOUSE", builtFilter.filter, builtFilter.argsAcc)
 
   const query = `
 SELECT
@@ -154,6 +160,7 @@ WHERE (${builtFilter.filter})
     query,
     builtFilter.argsAcc
   );
+  console.log("RESULT:", data, error)
   if (error !== null) {
     return { data: null, error: error };
   }

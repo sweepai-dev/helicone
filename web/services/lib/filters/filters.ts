@@ -76,6 +76,22 @@ const whereKeyMappings: KeyMappings = {
     value: "properties_copy_v2.value",
     organization_id: "properties_copy_v2.organization_id",
   },
+  feedback_copy: {
+    id: "feedback_copy.id",
+    created_at: "feedback_copy.created_at",
+    response_id: "feedback_copy.response_id",
+    boolean_value: "feedback_copy.boolean_value",
+    float_value: "feedback_copy.float_value",
+    string_value: "feedback_copy.string_value",
+    categorical_value: "feedback_copy.categorical_value",
+    created_by: "feedback_copy.created_by",
+    completion_tokens: "feedback_copy.completion_tokens",
+    prompt_tokens: "feedback_copy.prompt_tokens",
+    model: "feedback_copy.model",
+    organization_id: "feedback_copy.organization_id",
+    metric_name: "feedback_copy.metric_name",
+    metric_data_type: "feedback_copy.metric_data_type"
+  },
 };
 
 const havingKeyMappings: KeyMappings = {
@@ -96,6 +112,7 @@ const havingKeyMappings: KeyMappings = {
   },
   response_copy_v2: {},
   properties_copy_v2: {},
+  feedback_copy: {},
 };
 
 export function buildFilterLeaf(
@@ -331,7 +348,7 @@ export async function buildFilterWithAuthClickHouseProperties(
   }));
 }
 
-export async function buildFilterWithAuthClickHouseProperties(
+export async function buildFilterWithAuthClickHouseFeedback(
   args: ExternalBuildFilterArgs & { org_id: string }
 ): Promise<{ filter: string; argsAcc: any[] }> {
   return buildFilterWithAuth(args, "clickhouse", (orgId) => ({

@@ -39,7 +39,6 @@ import {
       refetchOnWindowFocus: false,
     });
   
-    console.log("THE FEEDBACK DATA IS", data);
     return (
       <>
         <AuthHeader title={"Feedback"} />
@@ -48,10 +47,11 @@ import {
         ) : (
           <ThemedTable
             columns={[
-              { name: "Metric Name", key: "metric_name", hidden: false },
-              { name: "Metric Data Type", key: "metric_data_type", hidden: false },
-              { name: "Event Count", key: "event_count", hidden: false },
-              { name: "Latest Event", key: "latest_event", hidden: false },
+                { name: "Name", key: "metric_name", hidden: false },
+                { name: "Type", key: "metric_data_type", hidden: false },
+                { name: "Statistic", key: "statistic", hidden: false },
+                { name: "Events", key: "event_count", hidden: false },
+                { name: "Last Recorded", key: "latest_event", hidden: false },
             ]}
             rows={data?.data ?? []}
           />

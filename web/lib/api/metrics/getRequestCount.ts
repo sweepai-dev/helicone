@@ -27,13 +27,13 @@ SELECT
   COUNT(*) AS count
  FROM request
    LEFT JOIN response ON response.request = request.id
-   LEFT JOIN user_api_keys ON user_api_keys.api_key_hash = request.auth_hash
   ${cached ? "inner join cache_hits ch ON ch.request_id = request.id" : ""}
 WHERE (
   
   (${filterString})
 )
 `;
+console.log("THE REAL DASHBOARD GET REQUEST COUNT", query, argsAcc)
 
   const { data, error } = await dbExecute<Count>(query, argsAcc);
 

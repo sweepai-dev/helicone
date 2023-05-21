@@ -53,7 +53,7 @@ export type DashboardMode = "requests" | "costs" | "errors";
 
 const DashboardPage = (props: DashboardPageProps) => {
   const { keys } = props;
-  const [interval, setInterval] = useState<TimeInterval>("24h");
+  const [interval, setInterval] = useState<TimeInterval>("7d");
   const [timeFilter, setTimeFilter] = useState<{
     start: Date;
     end: Date;
