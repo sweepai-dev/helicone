@@ -16,9 +16,10 @@ import {
   import { FeedbackData } from "../../../lib/api/feedback/feedback";
   import { Result } from "../../../lib/result";
   import LoadingAnimation from "../../shared/loadingAnimation";
-  
+  import FeedbackCard from './feedbackCard';
+    
   interface FeedbackPageProps {}
-  
+    
   const FeedbackPage = (props: FeedbackPageProps) => {
     const client = useSupabaseClient<Database>();
     const { data, isLoading } = useQuery({
@@ -38,23 +39,21 @@ import {
       },
       refetchOnWindowFocus: false,
     });
-  
+    
     return (
       <>
         <AuthHeader title={"Feedback"} />
         {isLoading ? (
           <LoadingAnimation title="Getting feedback data" />
         ) : (
-          <ThemedTable
-            columns={[
-                { name: "Name", key: "metric_name", hidden: false },
-                { name: "Type", key: "metric_data_type", hidden: false },
-                { name: "Statistic", key: "statistic", hidden: false },
-                { name: "Events", key: "event_count", hidden: false },
-                { name: "Last Recorded", key: "latest_event", hidden: false },
-            ]}
-            rows={data?.data ?? []}
-          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {data?.data?.map((feedback) => (
+              <FeedbackCard
+                feedback={feedback}
+                key={feedback.id}
+              />
+            ))}
+          </div>
         )}
       </>
     );
