@@ -26,11 +26,15 @@ export async function modelMetrics(
     return { data: null, error: "Invalid offset or limit" };
   }
 
+  console.log("MODELS BUILT FILTER", filter)
+
   const builtFilter = await buildFilterWithAuthClickHouse({
     org_id: orgId,
     argsAcc: [],
     filter,
   });
+
+  console.log("MODELS AFTER BUILT", builtFilter)
 
   const havingFilter = buildFilterClickHouse({
     filter,
@@ -52,6 +56,7 @@ HAVING (${havingFilter.filter})
 LIMIT ${limit}
 OFFSET ${offset}
   `;
+  console.log("HAVING QUERY", query)
 
   const { data, error } = await dbQueryClickhouse<ModelMetric>(
     query,

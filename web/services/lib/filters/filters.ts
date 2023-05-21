@@ -124,6 +124,8 @@ export function buildFilterLeaf(
   filters: string[];
   argsAcc: any[];
 } {
+  console.log("FRESH BUILD!", filter, argsAcc, )
+
   const filters: string[] = [];
 
   for (const tableKey in filter) {
@@ -138,12 +140,19 @@ export function buildFilterLeaf(
       for (const operatorKey in column) {
         const value = column[operatorKey as AllOperators];
 
+        console.log("table key", tableKey)
+        console.log("table key as keyof FilterLeaf", tableKey as keyof FilterLeaf)
+        console.log("key mappings", keyMappings)
+        console.log("key mappings table key", keyMappings[tableKey as keyof FilterLeaf])
         const whereKey = keyMappings[tableKey as keyof FilterLeaf];
         if (whereKey !== undefined) {
+          console.log("COLUMNKEY", filter, argsAcc, columnKey, typeof whereKey)
+          console.log("WHEREKEY", whereKey)
           const columnName =
             typeof whereKey === "function"
               ? whereKey(columnKey)
               : whereKey[columnKey as keyof typeof whereKey];
+          console.log("column name var", whereKey, columnKey as keyof typeof whereKey, whereKey[columnKey as keyof typeof whereKey])
 
           const sqlOperator =
             operatorKey === "equals"
@@ -175,9 +184,12 @@ export function buildFilterLeaf(
               argsAcc.push(value);
             }
           } else {
+            console.log(sqlOperator, columnName)
+            console.log("first throw")
             throw new Error(`Invalid filter: ${tableKey}.${columnKey}`);
           }
         } else {
+          console.log("second throw")
           throw new Error(`Invalid filter: ${tableKey}.${columnKey}`);
         }
       }

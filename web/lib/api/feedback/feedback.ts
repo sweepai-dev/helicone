@@ -15,30 +15,41 @@ export interface FeedbackData {
   statistic: string;
 }
 
+export interface TimeFilter {
+  start: Date;
+  end: Date;
+}
+
 export async function getFeedbackData(
   orgId: string,
   filter: FilterNode,
+  timeFilter: TimeFilter,
   offset: number,
   limit: number
 ): Promise<Result<FeedbackData[], string>> {
+  console.log("OFFSET BEFORE ERROR", offset, limit)
   if (isNaN(offset) || isNaN(limit)) {
     return { data: null, error: "Invalid offset or limit" };
   }
-
+  console.log("FILTER", filter)
   const builtFilter = await buildFilterWithAuthClickHouseFeedback({
     org_id: orgId,
     argsAcc: [],
     filter,
   });
+  console.log("BUILT FILTER IS FINE!", builtFilter)
+  console.log(filter, builtFilter.argsAcc)
+  // const havingFilter = buildFilterClickHouse({
+  //   filter,
+  //   having: true,
+  //   argsAcc: builtFilter.argsAcc,
+  // });
+  // console.log("HAVING FILTER IS BAD")
 
-  const havingFilter = buildFilterClickHouse({
-    filter,
-    having: true,
-    argsAcc: builtFilter.argsAcc,
-  });
-
-
-  // format('%d%%', 100 * AVG(CAST(boolean_value AS Int8)))
+  // Add start and end dates to the argsAcc array
+  // builtFilter.argsAcc.push(timeFilter.start);
+  // builtFilter.argsAcc.push(timeFilter.end);
+  console.log("PUSHED ARGS")
 
   const queries = {
     binary: `
@@ -51,7 +62,6 @@ export async function getFeedbackData(
     FROM feedback_copy
     WHERE boolean_value IS NOT NULL AND (${builtFilter.filter})
     GROUP BY metric_name
-    HAVING (${havingFilter.filter})
     LIMIT ${limit}
     OFFSET ${offset}
   `,
@@ -65,42 +75,14 @@ export async function getFeedbackData(
     FROM feedback_copy
     WHERE float_value IS NOT NULL AND (${builtFilter.filter})
     GROUP BY metric_name
-    HAVING (${havingFilter.filter})
     LIMIT ${limit}
     OFFSET ${offset}
   `,
-  //   categorical: `
-  //   SELECT
-  //     metric_name,
-  //     'categorical' as metric_data_type,
-  //     count(*) as event_count,
-  //     max(created_at) as latest_event,
-  //     toString(count(DISTINCT categorical_value)) as statistic
-  //   FROM feedback_copy
-  //   WHERE categorical_value IS NOT NULL AND (${builtFilter.filter})
-  //   GROUP BY metric_name
-  //   HAVING (${havingFilter.filter})
-  //   LIMIT ${limit}
-  //   OFFSET ${offset}
-  // `,
-  //   text: `
-  //   SELECT
-  //     metric_name,
-  //     'text' as metric_data_type,
-  //     count(*) as event_count,
-  //     max(created_at) as latest_event,
-  //     'NA' as statistic
-  //   FROM feedback_copy
-  //   WHERE string_value IS NOT NULL AND (${builtFilter.filter})
-  //   GROUP BY metric_name
-  //   HAVING (${havingFilter.filter})
-  //   LIMIT ${limit}
-  //   OFFSET ${offset}
-  // `,
   };
 
   const results = await Promise.all(
     Object.values(queries).map(async (query) => {
+      console.log("THE FINAL FINAL ARGS", builtFilter.argsAcc)
       const { data, error } = await dbQueryClickhouse<FeedbackData>(query, builtFilter.argsAcc);
       console.log("QUERY", query)
       console.log("ERROR", error)

@@ -39,6 +39,7 @@ WHERE (
 )
 GROUP BY response.body ->> 'model'::text;
     `;
+    console.log("METRICS QUERY", query)
   return resultMap(
     await dbExecute<ModelMetrics>(query, builtFilter.argsAcc),
     (data) => {

@@ -76,7 +76,7 @@ export async function getMetrics(
     aggregatedAvgMetrics,
   ] = data;
 
-  console.log("MODEL METRICS", modelMetrics);
+  console.log(modelMetrics);
 
   // calculate and format metrics
   const metrics: Metrics = {
