@@ -12,6 +12,7 @@ const FeedbackCard = (props: FeedbackCardProps) => {
 
   return (
     <li key={feedback.id} className="overflow-hidden border border-gray-300 rounded-xl w-full">
+    <Link href={`/feedback/${feedback.metric_name}`}>
       <div className="p-4 flex flex-row justify-between items-center">
         <div className="flex flex-row space-x-4 items-center">
           <InfoIcon className="h-8 w-8 bg-white p-1.5 rounded-md text-gray-200" />
@@ -38,6 +39,7 @@ const FeedbackCard = (props: FeedbackCardProps) => {
           <p className="text-gray-700">{feedback.latest_event}</p>
         </div>
       </div>
+      </Link>
     </li>
   );
 };

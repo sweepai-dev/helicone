@@ -1,9 +1,9 @@
 import { User } from "@supabase/auth-helpers-react";
 import { GetServerSidePropsContext } from "next";
-import AuthLayout from "../components/shared/layout/authLayout";
-import MetaData from "../components/shared/metaData";
-import FeedbackPage from "../components/templates/feedback/feedbackPage";
-import { SupabaseServerWrapper } from "../lib/wrappers/supabase";
+import AuthLayout from "../../components/shared/layout/authLayout";
+import MetaData from "../../components/shared/metaData";
+import FeedbackPage from "../../components/templates/feedback/feedbackPage";
+import { SupabaseServerWrapper } from "../../lib/wrappers/supabase";
 
 interface FeedbackProps {
   user: User;
