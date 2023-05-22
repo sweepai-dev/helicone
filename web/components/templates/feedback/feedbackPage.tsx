@@ -1,5 +1,8 @@
 import { useState } from "react";
-import { TimeInterval, getTimeIntervalAgo } from "../../../lib/timeCalculations/time";
+import {
+  TimeInterval,
+  getTimeIntervalAgo,
+} from "../../../lib/timeCalculations/time";
 import ThemedTableHeader from "../../shared/themed/themedTableHeader";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { Database } from "../../../supabase/database.types";
@@ -9,7 +12,11 @@ import { FeedbackData } from "../../../lib/api/feedback/feedback";
 import AuthHeader from "../../shared/authHeader";
 import LoadingAnimation from "../../shared/loadingAnimation";
 import FeedbackCard from "./feedbackCard";
-import { FilterLeaf, FilterNode, filterListToTree } from "../../../services/lib/filters/filterDefs";
+import {
+  FilterLeaf,
+  FilterNode,
+  filterListToTree,
+} from "../../../services/lib/filters/filterDefs";
 
 interface FeedbackPageProps {}
 
@@ -24,7 +31,7 @@ const FeedbackPage = (props: FeedbackPageProps) => {
     end: new Date(),
   });
 
-  const memoizedTimeFilter = timeFilter
+  const memoizedTimeFilter = timeFilter;
 
   const { data, isLoading } = useQuery({
     queryKey: ["feedbackData", memoizedTimeFilter],
@@ -33,12 +40,15 @@ const FeedbackPage = (props: FeedbackPageProps) => {
         start: Date;
         end: Date;
       };
-  
+
       const filter: FilterNode = {
         left: {
           feedback_copy: {
             created_at: {
-              gte: timeFilter.start.toISOString().replace('T', ' ').slice(0, -5),
+              gte: timeFilter.start
+                .toISOString()
+                .replace("T", " ")
+                .slice(0, -5),
             },
           },
         },
@@ -46,18 +56,18 @@ const FeedbackPage = (props: FeedbackPageProps) => {
         right: {
           feedback_copy: {
             created_at: {
-              lte: timeFilter.end.toISOString().replace('T', ' ').slice(0, -5),
+              lte: timeFilter.end.toISOString().replace("T", " ").slice(0, -5),
             },
           },
         },
       };
-  
+
       const requestBody = {
         filter,
         offset: 0,
         limit: 100,
       };
-  
+
       return fetch("/api/feedback/summary", {
         method: "POST",
         headers: {
@@ -80,7 +90,6 @@ const FeedbackPage = (props: FeedbackPageProps) => {
     },
     refetchOnWindowFocus: false,
   });
-  
 
   return (
     <>
@@ -127,7 +136,6 @@ const FeedbackPage = (props: FeedbackPageProps) => {
       )}
     </>
   );
-
 };
 
 export default FeedbackPage;

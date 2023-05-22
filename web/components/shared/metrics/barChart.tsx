@@ -47,7 +47,6 @@ export const RenderBarChart = ({
         <XAxis dataKey="time" />
         <YAxis />
         <Tooltip />
-        <Legend />
         <Bar dataKey="value" fill="#0ea4e9" name={valueLabel} />
       </BarChart>
     </ResponsiveContainer>

@@ -363,7 +363,8 @@ export default function ThemedHeader(props: ThemedHeaderProps) {
                                 <div className="p-4 items-center h-[200px] flex flex-col justify-center text-center text-gray-500 space-y-4">
                                   <Squares2X2Icon className="h-8 w-8" />
                                   <p>
-                                    Save a view of your currently selected columns and filters.
+                                    Save a view of your currently selected
+                                    columns and filters.
                                   </p>
                                 </div>
                               ) : (

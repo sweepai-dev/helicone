@@ -132,7 +132,7 @@ const RequestsPage = (props: RequestsPageProps) => {
     },
   });
   const { data: layouts, refetch: refetchLayouts } = useLayouts();
-  console.log("ALL LAYOUTS", layouts)
+  console.log("ALL LAYOUTS", layouts);
 
   const onCreateLayout = async (name: string) => {
     const { data, error } = await supabaseClient
@@ -157,7 +157,9 @@ const RequestsPage = (props: RequestsPageProps) => {
     setLayout(data[0].name);
   };
 
-  const [currentLayout, setCurrentLayout] = useState<LayoutState | null>(initialLayout ?? null);
+  const [currentLayout, setCurrentLayout] = useState<LayoutState | null>(
+    initialLayout ?? null
+  );
 
   function setLayout(name: string) {
     type Columns = {

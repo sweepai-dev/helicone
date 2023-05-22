@@ -33,7 +33,7 @@ WHERE (
   (${filterString})
 )
 `;
-console.log("THE REAL DASHBOARD GET REQUEST COUNT", query, argsAcc)
+  console.log("THE REAL DASHBOARD GET REQUEST COUNT", query, argsAcc);
 
   const { data, error } = await dbExecute<Count>(query, argsAcc);
 

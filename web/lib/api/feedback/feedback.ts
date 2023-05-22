@@ -77,7 +77,10 @@ export async function getFeedbackData(
 
   const results = await Promise.all(
     Object.values(queries).map(async (query) => {
-      const { data, error } = await dbQueryClickhouse<FeedbackDataClickhouse>(query, builtFilter.argsAcc);
+      const { data, error } = await dbQueryClickhouse<FeedbackDataClickhouse>(
+        query,
+        builtFilter.argsAcc
+      );
       if (error !== null) {
         return { data: null, error: error };
       }
@@ -100,7 +103,7 @@ export async function getFeedbackData(
       return acc;
     }
   }, [] as FeedbackDataClickhouse[]);
-  console.log("COMBINED DATA", combinedData)
+  console.log("COMBINED DATA", combinedData);
 
   // Collect all UUIDs
   const uuids = combinedData.map((feedbackData) => feedbackData.uuid);
@@ -113,20 +116,24 @@ export async function getFeedbackData(
     FROM feedback_metrics f
     WHERE f.uuid = ANY($1)
   `;
-  console.log("UNIQUE UUIDS", uniqueUuids)
-  const { data: feedbackMetrics, error: pgError } = await dbExecute<{ name: string, uuid: string }>(query, [uniqueUuids]);
+  console.log("UNIQUE UUIDS", uniqueUuids);
+  const { data: feedbackMetrics, error: pgError } = await dbExecute<{
+    name: string;
+    uuid: string;
+  }>(query, [uniqueUuids]);
 
   // Error handling
   if (pgError) {
     return { data: null, error: pgError };
   }
   if (feedbackMetrics === null || feedbackMetrics.length === 0) {
-    console.log("HEY HO! NO FEEDBACK METRICS", feedbackMetrics === null, feedbackMetrics.length === 0)
     return { data: [], error: null };
   }
 
   // Map of uuid to metric name
-  const uuidToMetricName = new Map(feedbackMetrics.map(fm => [fm.uuid, fm.name]));
+  const uuidToMetricName = new Map(
+    feedbackMetrics.map((fm) => [fm.uuid, fm.name])
+  );
 
   // Replace the uuid with the corresponding metric name in combinedData
   // Replace the uuid with the corresponding metric name in combinedData
@@ -136,7 +143,6 @@ export async function getFeedbackData(
       metric_name: uuidToMetricName.get(feedbackData.uuid) || "",
     };
   });
-  console.log("FULL FEEDBACK DATA", fullFeedbackData)
-  return { data: fullFeedbackData, error: null };
 
+  return { data: fullFeedbackData, error: null };
 }
