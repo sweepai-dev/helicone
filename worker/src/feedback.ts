@@ -167,6 +167,7 @@ async function isResponseLogged(
 interface FeedbackData {
   response_id: any;
   feedback_metric_id: any;
+  feedback_metric_uuid: any;
   created_by: string;
   boolean_value: boolean | null;
   float_value: number | null;
@@ -176,6 +177,7 @@ interface FeedbackData {
 
 interface FullFeedbackData {
   id: number;
+  uuid: string;
   feedbackData: FeedbackData;
   metricName: string;
   metricDataType: string;
@@ -222,6 +224,7 @@ async function logClickhouse(
   clickhouseDb.dbInsertClickhouse("feedback_copy", [
     {
       id: fullFeedbackData.id,
+      uuid: fullFeedbackData.uuid,
       created_at: feedbackCreatedTime || null,
       response_id: fullFeedbackData.feedbackData.response_id,
       boolean_value: fullFeedbackData.feedbackData.boolean_value,
@@ -306,12 +309,13 @@ export async function addFeedback(
   // Check if the feedback_metric exists for the given name and api_key_id
   const { data: metricData, error: metricError } = await dbClient
     .from("feedback_metrics")
-    .select("id, data_type")
+    .select("id, data_type, uuid")
     .eq("name", name)
     .eq("helicone_api_key_id", matchingApiKeyId)
     .single();
 
   let metricId;
+  let metricUuid;
   if (metricError || !metricData) {
     // Create a new feedback_metric if it doesn't exist
     const { data, error: newMetricError } = await dbClient
@@ -321,7 +325,7 @@ export async function addFeedback(
         name,
         data_type: dataType,
       })
-      .select("id")
+      .select("id, uuid")
       .single();
 
     if (newMetricError) {
@@ -330,6 +334,7 @@ export async function addFeedback(
     }
 
     metricId = data.id;
+    metricUuid = data.uuid;
   } else {
     // Validate the data type before inserting the feedback
     if (
@@ -342,12 +347,14 @@ export async function addFeedback(
     }
 
     metricId = metricData.id;
+    metricUuid = metricData.uuid;
   }
 
   // Prepare feedback data
   const feedbackData: FeedbackData = {
     response_id: responseId,
     feedback_metric_id: metricId,
+    feedback_metric_uuid: metricUuid,
     created_by: "API",
     boolean_value: null,
     categorical_value: null,
@@ -404,6 +411,7 @@ export async function addFeedback(
   } else {
     const fullFeedbackData: FullFeedbackData = {
       id: data,
+      uuid: metricUuid,
       feedbackData: feedbackData,
       metricName: name,
       metricDataType: dataType,

@@ -329,7 +329,7 @@ export default function ThemedHeader(props: ThemedHeaderProps) {
                       <span className="sm:inline hidden lg:inline overflow-ellipsis truncate max-w-[100px]">
                         {layout.currentLayout !== null
                           ? layout.currentLayout.name
-                          : "Layouts"}
+                          : "Views"}
                       </span>
                     </Popover.Button>
 
@@ -349,13 +349,13 @@ export default function ThemedHeader(props: ThemedHeaderProps) {
                               <button
                                 type="button"
                                 onClick={() => setOpenLayout(true)}
-                                className="text-xs flex items-center justify-center gap-x-2.5 p-3 font-semibold text-gray-900 hover:bg-gray-100 border-b border-gray-900/5"
+                                className="text-sm flex items-center justify-center gap-x-2.5 p-3 font-semibold text-gray-900 hover:bg-gray-100 border-b border-gray-900/5"
                               >
                                 <PlusCircleIcon
                                   className="h-4 w-4 flex-none text-gray-400"
                                   aria-hidden="true"
                                 />
-                                Create Layout
+                                New view
                               </button>
                             </div>
                             <fieldset className="min-w-[250px] max-h-[400px] w-full overflow-auto flex-auto bg-white text-sm leading-6 shadow-lg ring-1 ring-gray-900/5 rounded-b-lg">
@@ -363,9 +363,7 @@ export default function ThemedHeader(props: ThemedHeaderProps) {
                                 <div className="p-4 items-center h-[200px] flex flex-col justify-center text-center text-gray-500 space-y-4">
                                   <Squares2X2Icon className="h-8 w-8" />
                                   <p>
-                                    Create layouts to easily switch between
-                                    different filters, column selections, and
-                                    sort orders.
+                                    Save a view of your currently selected columns and filters.
                                   </p>
                                 </div>
                               ) : (
@@ -590,18 +588,14 @@ export default function ThemedHeader(props: ThemedHeaderProps) {
           <div className="flex flex-col space-y-4 sm:space-y-8 max-w-sm">
             <div className="flex flex-col space-y-2">
               <p className="text-sm sm:text-md font-semibold text-gray-900">
-                Create Layout
-              </p>
-              <p className="text-sm sm:text-md text-gray-500">
-                Create layouts to easily switch between different filters,
-                column selections, and sort orders.
+                Save a view of your currently selected columns and filters.
               </p>
             </div>
 
             <input
               type="text"
               onChange={(e) => setName(e.target.value)}
-              placeholder={"Layout Name..."}
+              placeholder={"View name..."}
               value={name}
               className="block w-full rounded-md border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-sm"
             />
@@ -613,8 +607,7 @@ export default function ThemedHeader(props: ThemedHeaderProps) {
                   setOpenLayout(false);
                 }}
               >
-                <PlusIcon className="h-4 w-4 inline" />
-                Add Layout
+                Create view
               </button>
             </div>
           </div>

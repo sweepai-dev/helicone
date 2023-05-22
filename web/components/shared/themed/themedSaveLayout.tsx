@@ -39,7 +39,7 @@ const SaveLayoutButton: React.FC<SaveLayoutButtonProps> = ({ saveLayout }) => {
           className="h-4 w-4 flex-none text-gray-400"
           aria-hidden="true"
         />
-        Create Layout
+        Create View
       </button>
       <ThemedModal open={open} setOpen={setOpen}>
         <div className="flex flex-col space-y-4 sm:space-y-8 min-w-[25rem]">
@@ -55,7 +55,7 @@ const SaveLayoutButton: React.FC<SaveLayoutButtonProps> = ({ saveLayout }) => {
           <input
             type="text"
             onChange={(e) => setName(e.target.value)}
-            placeholder={"Layout Name..."}
+            placeholder={"View name..."}
             value={name}
             className="block w-full rounded-md border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-sm"
           />
@@ -67,8 +67,7 @@ const SaveLayoutButton: React.FC<SaveLayoutButtonProps> = ({ saveLayout }) => {
                 setOpen(false);
               }}
             >
-              <PlusIcon className="h-4 w-4 inline" />
-              Add Layout
+              Create view
             </button>
           </div>
         </div>

@@ -9,6 +9,7 @@ import {
   BeakerIcon,
   CogIcon,
   CubeTransparentIcon,
+  HandThumbUpIcon,
   HomeIcon,
   InboxArrowDownIcon,
   KeyIcon,
@@ -84,12 +85,12 @@ const AuthLayout = (props: AuthLayoutProps) => {
       icon: CubeTransparentIcon,
       current: pathname.includes("/models"),
     },
-    // {
-    //   name: "Feedback",
-    //   href: "/feedback",
-    //   icon: CubeTransparentIcon,
-    //   current: pathname.includes("/feedback"),
-    // },
+    {
+      name: "Feedback",
+      href: "/feedback",
+      icon: HandThumbUpIcon,
+      current: pathname.includes("/feedback"),
+    },
   ];
 
   const accountNav = [

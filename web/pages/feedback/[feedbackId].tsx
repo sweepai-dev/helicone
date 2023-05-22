@@ -7,50 +7,51 @@ import {
   import AuthHeader from "../../components/shared/authHeader";
   import AuthLayout from "../../components/shared/layout/authLayout";
   import MetaData from "../../components/shared/metaData";
-  import OrgIdPage from "../../components/templates/organizationId/orgIdPage";
-  import { useGetOrgs } from "../../services/hooks/organizations";
+//   import FeedbackIdPage from "../../components/templates/feedbackId/feedbackIdPage"; // Import your FeedbackIdPage component
+  import { Feedback, useGetFeedbacks } from "../../services/hooks/feedback"; // Import your useGetFeedbacks hook
   import { Database } from "../../supabase/database.types";
+import FeedbackIdPage from "../../components/templates/feedbackId/feedbackIdPage";
   
-  interface OrganizationIdProps {
+  interface FeedbackIdProps {
     user: User;
   }
   
-  const OrganizationId = (props: OrganizationIdProps) => {
+  const FeedbackId = (props: FeedbackIdProps) => {
     const { user } = props;
     const router = useRouter();
-    const { orgId } = router.query;
+    const { feedbackId } = router.query;
   
-    const { data, isLoading } = useGetOrgs();
+    const { feedback: data, isLoading } = useGetFeedbacks();
   
-    const organization = data?.find((org) => org.id === orgId);
+    const feedback = data?.find((feedback: Feedback) => feedback.uuid === feedbackId);
   
-    if (isLoading || !organization) {
+    if (isLoading || !feedback) {
       return (
-        <MetaData title="Organizations">
+        <MetaData title="Feedback">
           <AuthLayout user={user}>
-            <AuthHeader title={"Organizations"} />
+            <AuthHeader title={"Feedback"} />
           </AuthLayout>
         </MetaData>
       );
     }
   
     return (
-      <MetaData title="Organizations">
+      <MetaData title="Feedback">
         <AuthLayout user={user}>
           <AuthHeader
-            title={organization?.name || (orgId as string)}
+            title={feedback?.name || (feedbackId as string)} // Use a title suitable for your feedback
             breadcrumb={{
-              href: "/organizations",
-              title: "Organizations",
+              href: "/feedback",
+              title: "Feedback",
             }}
           />
-          <OrgIdPage org={organization} />
+          <FeedbackIdPage feedback={feedback} />
         </AuthLayout>
       </MetaData>
     );
   };
   
-  export default OrganizationId;
+  export default FeedbackId;
   
   export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
     // Create authenticated Supabase Client

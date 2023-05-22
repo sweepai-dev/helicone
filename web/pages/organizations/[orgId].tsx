@@ -21,7 +21,6 @@ const OrganizationId = (props: OrganizationIdProps) => {
   const { orgId } = router.query;
 
   const { data, isLoading } = useGetOrgs();
-  console.log("THE DATA FROM GET ORGS", data)
 
   const organization = data?.find((org) => org.id === orgId);
 

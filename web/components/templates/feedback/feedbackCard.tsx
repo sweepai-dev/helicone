@@ -11,9 +11,9 @@ const FeedbackCard = (props: FeedbackCardProps) => {
   const { feedback } = props;
 
   return (
-    <li key={feedback.id} className="overflow-hidden border border-gray-300 rounded-xl w-full">
-    <Link href={`/feedback/${feedback.metric_name}`}>
-      <div className="p-4 flex flex-row justify-between items-center">
+    <li key={feedback.uuid} className="overflow-hidden border border-gray-300 rounded-xl w-full">
+    <Link href={`/feedback/${feedback.uuid}`}>
+      <div className="p-4 flex flex-row justify-between items-center bg-blue-300">
         <div className="flex flex-row space-x-4 items-center">
           <InfoIcon className="h-8 w-8 bg-white p-1.5 rounded-md text-gray-200" />
           <p className="text-md font-semibold flex-1 overflow-ellipsis truncate w-[200px]">

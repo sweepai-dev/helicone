@@ -11,12 +11,13 @@ import { getPropertyParams } from "../lib/propertyParams";
 import { useDebounce } from "./debounce";
 import { getFeedback } from "../lib/feedback";
 
-interface Feedback {
+export interface Feedback {
     name: string;
     dataType: string;
+    uuid: string;
 }
 
-const useGetFeedback = () => {
+const useGetFeedbacks = () => {
   const { data, isLoading, error } = useQuery({
     queryKey: ["feedback"],
     queryFn: async () => {
@@ -34,4 +35,4 @@ const useGetFeedback = () => {
   };
 };
 
-export { useGetFeedback };
+export { useGetFeedbacks };

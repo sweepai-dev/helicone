@@ -5,9 +5,18 @@ import {
   buildFilterWithAuthClickHouseFeedback,
 } from "../../../services/lib/filters/filters";
 import { Result } from "../../result";
-import { dbQueryClickhouse } from "../db/dbExecute";
+import { dbExecute, dbQueryClickhouse } from "../db/dbExecute";
+
+interface FeedbackDataClickhouse {
+  uuid: string;
+  metric_data_type: string;
+  event_count: number;
+  latest_event: string;
+  statistic: string;
+}
 
 export interface FeedbackData {
+  uuid: string;
   metric_name: string;
   metric_data_type: string;
   event_count: number;
@@ -27,54 +36,40 @@ export async function getFeedbackData(
   offset: number,
   limit: number
 ): Promise<Result<FeedbackData[], string>> {
-  console.log("OFFSET BEFORE ERROR", offset, limit)
   if (isNaN(offset) || isNaN(limit)) {
     return { data: null, error: "Invalid offset or limit" };
   }
-  console.log("FILTER", filter)
+
   const builtFilter = await buildFilterWithAuthClickHouseFeedback({
     org_id: orgId,
     argsAcc: [],
     filter,
   });
-  console.log("BUILT FILTER IS FINE!", builtFilter)
-  console.log(filter, builtFilter.argsAcc)
-  // const havingFilter = buildFilterClickHouse({
-  //   filter,
-  //   having: true,
-  //   argsAcc: builtFilter.argsAcc,
-  // });
-  // console.log("HAVING FILTER IS BAD")
-
-  // Add start and end dates to the argsAcc array
-  // builtFilter.argsAcc.push(timeFilter.start);
-  // builtFilter.argsAcc.push(timeFilter.end);
-  console.log("PUSHED ARGS")
 
   const queries = {
     binary: `
     SELECT
-      metric_name,
+      uuid,
       'binary' as metric_data_type,
       count(*) as event_count,
       max(created_at) as latest_event,
       concat(CAST(100 * AVG(CAST(boolean_value AS Int8)), 'String'), '%') as statistic
     FROM feedback_copy
     WHERE boolean_value IS NOT NULL AND (${builtFilter.filter})
-    GROUP BY metric_name
+    GROUP BY uuid
     LIMIT ${limit}
     OFFSET ${offset}
   `,
     numerical: `
     SELECT
-      metric_name,
+      uuid,
       'numerical' as metric_data_type,
       count(*) as event_count,
       max(created_at) as latest_event,
       toString(AVG(float_value)) as statistic
     FROM feedback_copy
     WHERE float_value IS NOT NULL AND (${builtFilter.filter})
-    GROUP BY metric_name
+    GROUP BY uuid
     LIMIT ${limit}
     OFFSET ${offset}
   `,
@@ -82,18 +77,14 @@ export async function getFeedbackData(
 
   const results = await Promise.all(
     Object.values(queries).map(async (query) => {
-      console.log("THE FINAL FINAL ARGS", builtFilter.argsAcc)
-      const { data, error } = await dbQueryClickhouse<FeedbackData>(query, builtFilter.argsAcc);
-      console.log("QUERY", query)
-      console.log("ERROR", error)
-  
+      const { data, error } = await dbQueryClickhouse<FeedbackDataClickhouse>(query, builtFilter.argsAcc);
       if (error !== null) {
         return { data: null, error: error };
       }
       return { data: data, error: null };
     })
   );
-  
+
   // Check for errors in results
   for (let result of results) {
     if (result.error) {
@@ -108,9 +99,44 @@ export async function getFeedbackData(
     } else {
       return acc;
     }
-  }, [] as FeedbackData[]);
+  }, [] as FeedbackDataClickhouse[]);
+  console.log("COMBINED DATA", combinedData)
 
-  // Return combined data
-  return { data: combinedData, error: null };
+  // Collect all UUIDs
+  const uuids = combinedData.map((feedbackData) => feedbackData.uuid);
+  // Convert to unique list
+  const uniqueUuids = [...Array.from(new Set(uuids))];
+
+  // Query PostgreSQL to get metric names of these UUIDs
+  const query = `
+    SELECT f.name, f.uuid
+    FROM feedback_metrics f
+    WHERE f.uuid = ANY($1)
+  `;
+  console.log("UNIQUE UUIDS", uniqueUuids)
+  const { data: feedbackMetrics, error: pgError } = await dbExecute<{ name: string, uuid: string }>(query, [uniqueUuids]);
+
+  // Error handling
+  if (pgError) {
+    return { data: null, error: pgError };
+  }
+  if (feedbackMetrics === null || feedbackMetrics.length === 0) {
+    console.log("HEY HO! NO FEEDBACK METRICS", feedbackMetrics === null, feedbackMetrics.length === 0)
+    return { data: [], error: null };
+  }
+
+  // Map of uuid to metric name
+  const uuidToMetricName = new Map(feedbackMetrics.map(fm => [fm.uuid, fm.name]));
+
+  // Replace the uuid with the corresponding metric name in combinedData
+  // Replace the uuid with the corresponding metric name in combinedData
+  const fullFeedbackData: FeedbackData[] = combinedData.map((feedbackData) => {
+    return {
+      ...feedbackData,
+      metric_name: uuidToMetricName.get(feedbackData.uuid) || "",
+    };
+  });
+  console.log("FULL FEEDBACK DATA", fullFeedbackData)
+  return { data: fullFeedbackData, error: null };
 
 }

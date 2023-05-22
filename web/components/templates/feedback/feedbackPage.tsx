@@ -119,11 +119,11 @@ const FeedbackPage = (props: FeedbackPageProps) => {
       {isLoading ? (
         <LoadingAnimation title="Getting feedback data" />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-start mt-8">
+        <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-start mt-8">
           {data?.data?.map((feedback) => (
-            <FeedbackCard feedback={feedback} key={feedback.id} />
+            <FeedbackCard feedback={feedback} key={feedback.uuid} />
           ))}
-        </div>
+        </ul>
       )}
     </>
   );

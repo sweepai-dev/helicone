@@ -8,13 +8,14 @@ import { Result } from "../../../../lib/result";
 interface FeedbackMetric {
   name: string;
   data_type: string;
+  uuid: string;
 }
 
 async function getFeedbackMetrics(
   org_id: string
 ): Promise<Result<FeedbackMetric[], string>> {
   const query = `
-    SELECT f.name, f.data_type
+    SELECT f.name, f.data_type, f.uuid
     FROM feedback_metrics f
     JOIN helicone_api_keys h ON f.helicone_api_key_id = h.id
     WHERE h.organization_id = '${org_id}'

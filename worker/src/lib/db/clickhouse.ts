@@ -307,6 +307,7 @@ interface PropertiesCopyV2 {
 interface FeedbackCopy {
   id: number;
   created_at: Nullable<string>;
+  uuid: Nullable<string>;
   response_id: Nullable<string>;
   boolean_value: Nullable<boolean>;
   float_value: Nullable<number>;

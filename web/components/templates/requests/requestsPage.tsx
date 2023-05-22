@@ -81,10 +81,20 @@ export type CsvData = {
   [keys: string]: string | number | null | boolean | ChatProperties;
 };
 
+interface LayoutState {
+  columns: Json;
+  created_at: string | null;
+  filters: Json;
+  id: number;
+  name: string;
+  user_id: string;
+}
+
 interface RequestsPageProps {
   page: number;
   pageSize: number;
   sortBy: string | null;
+  initialLayout?: LayoutState;
 }
 
 function buildQueryFilter(router: NextRouter): FilterNode {
@@ -103,7 +113,7 @@ function buildQueryFilter(router: NextRouter): FilterNode {
 }
 
 const RequestsPage = (props: RequestsPageProps) => {
-  const { page, pageSize, sortBy } = props;
+  const { page, pageSize, sortBy, initialLayout } = props;
   const supabaseClient = useSupabaseClient<Database>();
   const user = useUser();
   const { setNotification } = useNotification();
@@ -122,6 +132,7 @@ const RequestsPage = (props: RequestsPageProps) => {
     },
   });
   const { data: layouts, refetch: refetchLayouts } = useLayouts();
+  console.log("ALL LAYOUTS", layouts)
 
   const onCreateLayout = async (name: string) => {
     const { data, error } = await supabaseClient
@@ -146,14 +157,7 @@ const RequestsPage = (props: RequestsPageProps) => {
     setLayout(data[0].name);
   };
 
-  const [currentLayout, setCurrentLayout] = useState<{
-    columns: Json;
-    created_at: string | null;
-    filters: Json;
-    id: number;
-    name: string;
-    user_id: string;
-  } | null>(null);
+  const [currentLayout, setCurrentLayout] = useState<LayoutState | null>(initialLayout ?? null);
 
   function setLayout(name: string) {
     type Columns = {
