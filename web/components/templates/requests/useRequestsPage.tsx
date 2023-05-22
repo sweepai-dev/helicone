@@ -4,7 +4,7 @@ import { ok, Result } from "../../../lib/result";
 import { useDebounce } from "../../../services/hooks/debounce";
 import { useGetPromptValues } from "../../../services/hooks/promptValues";
 import { useGetProperties } from "../../../services/hooks/properties";
-import { useGetFeedbacks } from "../../../services/hooks/feedback";
+import { useGetFeedbackMetrics } from "../../../services/hooks/feedbackMetrics";
 import { useGetRequests } from "../../../services/hooks/requests";
 import { useGetValueParams } from "../../../services/hooks/valueParams";
 import {
@@ -234,7 +234,7 @@ const useRequestsPage = (
     searchPropertyFilters,
   } = useGetProperties();
 
-  const { feedback, isLoading: isFeedbackLoading } = useGetFeedbacks();
+  const { feedback, isLoading: isFeedbackLoading } = useGetFeedbackMetrics();
 
   const filterMap = (requestTableFilters as SingleFilterDef<any>[]).concat(
     propertyFilters

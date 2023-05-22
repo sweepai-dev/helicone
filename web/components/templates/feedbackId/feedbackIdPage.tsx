@@ -1,4 +1,4 @@
-import { Feedback } from "../../../services/hooks/feedback";
+import { Feedback } from "../../../services/hooks/feedbackMetrics";
 import RequestsPage from "../requests/requestsPage";
 
 interface FeedbackIdPageProps {

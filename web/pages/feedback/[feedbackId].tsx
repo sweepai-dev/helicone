@@ -8,7 +8,7 @@ import AuthHeader from "../../components/shared/authHeader";
 import AuthLayout from "../../components/shared/layout/authLayout";
 import MetaData from "../../components/shared/metaData";
 //   import FeedbackIdPage from "../../components/templates/feedbackId/feedbackIdPage"; // Import your FeedbackIdPage component
-import { Feedback, useGetFeedbacks } from "../../services/hooks/feedback"; // Import your useGetFeedbacks hook
+import { Feedback, useGetFeedbackMetrics } from "../../services/hooks/feedbackMetrics"; // Import your useGetFeedbacks hook
 import { Database } from "../../supabase/database.types";
 import FeedbackIdPage from "../../components/templates/feedbackId/feedbackIdPage";
 
@@ -21,7 +21,7 @@ const FeedbackId = (props: FeedbackIdProps) => {
   const router = useRouter();
   const { feedbackId } = router.query;
 
-  const { feedback: data, isLoading } = useGetFeedbacks();
+  const { feedback: data, isLoading } = useGetFeedbackMetrics();
 
   const feedback = data?.find(
     (feedback: Feedback) => feedback.uuid === feedbackId
