@@ -17,6 +17,7 @@ import {
   FilterNode,
   filterListToTree,
 } from "../../../services/lib/filters/filterDefs";
+import { useGetFeedbackAggregates } from "../../../services/hooks/feedbackAggregates";
 
 interface FeedbackPageProps {}
 
@@ -33,63 +34,7 @@ const FeedbackPage = (props: FeedbackPageProps) => {
 
   const memoizedTimeFilter = timeFilter;
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["feedbackData", memoizedTimeFilter],
-    queryFn: async (query) => {
-      const timeFilter = query.queryKey[1] as {
-        start: Date;
-        end: Date;
-      };
-
-      const filter: FilterNode = {
-        left: {
-          feedback_copy: {
-            created_at: {
-              gte: timeFilter.start
-                .toISOString()
-                .replace("T", " ")
-                .slice(0, -5),
-            },
-          },
-        },
-        operator: "and",
-        right: {
-          feedback_copy: {
-            created_at: {
-              lte: timeFilter.end.toISOString().replace("T", " ").slice(0, -5),
-            },
-          },
-        },
-      };
-
-      const requestBody = {
-        filter,
-        offset: 0,
-        limit: 100,
-      };
-
-      return fetch("/api/feedback/summary", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
-      })
-        .then((res) => res.json() as Promise<Result<FeedbackData[], string>>)
-        .then(({ data, error }) => {
-          if (error !== null) {
-            console.error(error);
-            return { data, error };
-          } else {
-            return {
-              data,
-              error,
-            };
-          }
-        });
-    },
-    refetchOnWindowFocus: false,
-  });
+  const { data, isLoading } = useGetFeedbackAggregates(memoizedTimeFilter);
 
   return (
     <>

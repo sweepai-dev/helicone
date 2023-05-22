@@ -1,4 +1,4 @@
-interface MetricsPanelProps {
+export interface MetricsPanelProps {
   metric: {
     isLoading: boolean;
     value: number | string;

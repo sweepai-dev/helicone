@@ -79,6 +79,7 @@ const whereKeyMappings: KeyMappings = {
   feedback_copy: {
     id: "feedback_copy.id",
     created_at: "feedback_copy.created_at",
+    uuid: "feedback_copy.uuid",
     response_id: "feedback_copy.response_id",
     boolean_value: "feedback_copy.boolean_value",
     float_value: "feedback_copy.float_value",

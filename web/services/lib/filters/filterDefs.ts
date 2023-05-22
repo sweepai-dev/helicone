@@ -106,6 +106,7 @@ export type FilterLeafUserView = SingleKey<UserViewToOperators>;
 type FeedbackCopyToOperators = {
   id: SingleKey<NumberOperators>;
   created_at: SingleKey<TimestampOperators>;
+  uuid: SingleKey<TextOperators>;
   response_id: SingleKey<TextOperators>;
   boolean_value: SingleKey<TextOperators>;
   float_value: SingleKey<NumberOperators>;
