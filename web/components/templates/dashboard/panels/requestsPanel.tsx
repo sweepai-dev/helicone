@@ -20,7 +20,7 @@ interface RequestsPanelProps {
   advancedFilters: FilterNode;
 }
 
-function unwrapDefaultEmpty<T>(data: Loading<Result<T[], string>>): T[] {
+export function unwrapDefaultEmpty<T>(data: Loading<Result<T[], string>>): T[] {
   if (data === "loading") {
     return [];
   }

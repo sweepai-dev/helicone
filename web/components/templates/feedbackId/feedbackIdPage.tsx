@@ -8,7 +8,11 @@ import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline"
 import { BarChartData, RenderBarChart } from "../../shared/metrics/barChart";
 import { Loading } from "../dashboard/dashboardPage";
 import { Result } from "../../../lib/result";
-import { RequestsOverTime } from "../../../lib/timeCalculations/fetchTimeData";
+import { RequestsOverTime, TimeIncrement } from "../../../lib/timeCalculations/fetchTimeData";
+import { FilterLeaf } from "../../../services/lib/filters/filterDefs";
+import FeedbackPanel from "../feedback/feedbackPanel";
+import { getTimeMap } from "../../../lib/timeCalculations/constants";
+import { useFeedbackOverTime } from "../feedback/useFeedbackOverTime";
 
 interface FeedbackIdPageProps {
   feedback: Feedback;
@@ -36,20 +40,19 @@ const FeedbackIdPage = (props: FeedbackIdPageProps) => {
         icon: ArrowTopRightOnSquareIcon,
     }
 
-   const requestsOverTime: Loading<Result<RequestsOverTime[], string>>
+    const userFilters: FilterLeaf[] = [];
+    const { data: feedbackDataOverTime, error: feedbackError, isLoading: feedbackLoading } = useFeedbackOverTime(timeFilter, userFilters);
+
+    const timeMap = getTimeMap(timeFilter.start, timeFilter.end);
 
   return (
     <div>
       <pre>{JSON.stringify(feedback, null, 2)}</pre>
       <MetricsPanel metric={metric} key={1} />
-      <RenderBarChart
-        data={unwrapDefaultEmpty(requestsOverTime).map((r) => ({
-            ...r,
-            value: r.count,
-        }))}
+      <FeedbackPanel
+        feedbackStatisticOverTime={feedbackLoading ? "loading" : { data: feedbackDataOverTime, error: feedbackError }}
         timeMap={timeMap}
-        valueLabel=""
-        />
+      />
       <RequestsPage page={1} pageSize={25} sortBy={null} />
     </div>
   );

@@ -24,6 +24,7 @@ async function handler({
     return;
   }
   const properties = await getProperties(orgId);
+  console.log("ALL PROPERTIES", properties);
   res.status(properties.error === null ? 200 : 500).json(properties);
 }
 
