@@ -339,7 +339,7 @@ const Login = (props: LoginProps) => {
                       </div>
                     ) : (
                       <div>
-                        don{"'"}t have an account?{" "}
+                        Don{"'"}t have an account?{" "}
                         <a
                           onClick={() => setFormState("signup")}
                           className="text-indigo-600 hover:text-indigo-500 hover:cursor-pointer"
