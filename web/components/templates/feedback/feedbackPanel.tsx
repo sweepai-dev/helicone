@@ -1,9 +1,7 @@
 import { DateStatisticDBModel } from '../../../lib/api/metrics/getFeedbackStatisticOverTime';
 import { Result } from '../../../lib/result';
-import { RequestsOverTime } from '../../../lib/timeCalculations/fetchTimeData';
 import { RenderBarChart } from '../../shared/metrics/barChart';
 import { Loading } from '../dashboard/dashboardPage';
-// import { unwrapDefaultEmpty } from '../dashboard/panels/requestsPanel';
 
 interface FeedbackPanelProps {
   feedbackStatisticOverTime: Loading<Result<DateStatisticDBModel[], string>>;
@@ -38,7 +36,7 @@ const FeedbackPanel = (props: FeedbackPanelProps) => {
             ) : (
               <RenderBarChart
                 data={unwrapDefaultEmpty(feedbackStatisticOverTime).map((f) => ({
-                  ...f,
+                  time: f.created_at_trunc,
                   value: f.statistic,
                 }))}
                 timeMap={timeMap}

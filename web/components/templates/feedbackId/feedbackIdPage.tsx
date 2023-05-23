@@ -5,10 +5,6 @@ import RequestsPage from "../requests/requestsPage";
 import { TimeInterval, getTimeIntervalAgo } from "../../../lib/timeCalculations/time";
 import { MetricsPanel, MetricsPanelProps } from "../../shared/metrics/metricsPanel";
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline"
-import { BarChartData, RenderBarChart } from "../../shared/metrics/barChart";
-import { Loading } from "../dashboard/dashboardPage";
-import { Result } from "../../../lib/result";
-import { RequestsOverTime, TimeIncrement } from "../../../lib/timeCalculations/fetchTimeData";
 import { FilterLeaf } from "../../../services/lib/filters/filterDefs";
 import FeedbackPanel from "../feedback/feedbackPanel";
 import { getTimeMap } from "../../../lib/timeCalculations/constants";
@@ -41,7 +37,7 @@ const FeedbackIdPage = (props: FeedbackIdPageProps) => {
     }
 
     const userFilters: FilterLeaf[] = [];
-    const { data: feedbackDataOverTime, error: feedbackError, isLoading: feedbackLoading } = useFeedbackOverTime(timeFilter, userFilters);
+    const { data: feedbackDataOverTime, error: feedbackError, isLoading: feedbackLoading } = useFeedbackOverTime({timeFilter, userFilters});
 
     const timeMap = getTimeMap(timeFilter.start, timeFilter.end);
 
@@ -50,7 +46,7 @@ const FeedbackIdPage = (props: FeedbackIdPageProps) => {
       <pre>{JSON.stringify(feedback, null, 2)}</pre>
       <MetricsPanel metric={metric} key={1} />
       <FeedbackPanel
-        feedbackStatisticOverTime={feedbackLoading ? "loading" : { data: feedbackDataOverTime, error: feedbackError }}
+        feedbackStatisticOverTime={feedbackDataOverTime ?? "loading"}
         timeMap={timeMap}
       />
       <RequestsPage page={1} pageSize={25} sortBy={null} />
