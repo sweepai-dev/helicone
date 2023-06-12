@@ -4,7 +4,7 @@
     "light": "/logo/light.svg",
     "dark": "/logo/dark.svg"
   },
-  "favicon": "/favicon.png",
+  "favicon": "/favicon.webp",
   "colors": {
     "primary": "#0284C7",
     "light": "#BAE6FD",
@@ -18,12 +18,6 @@
     "name": "Sign In",
     "url": "https://www.helicone.ai/#:~:text=Discord-,Sign,-In"
   },
-  "topbarLinks": [
-    {
-      "name": "Get Started",
-      "url": "https://www.helicone.ai/onboarding"
-    }
-  ],
   "anchors": [
     {
       "name": "Community",
@@ -34,36 +28,24 @@
       "name": "GitHub",
       "icon": "github",
       "url": "https://github.com/mintlify-onboarding/helicone"
-    },
-    {
-      "name": "Demo",
-      "icon": "circle-play",
-      "url": "https://www.helicone.ai/#:~:text=View-,Demo,-%E2%86%92"
     }
   ],
   "navigation": [
     {
+      "group": "Welcome",
+      "pages": ["introduction", "overview"]
+    },
+    {
       "group": "Getting Started",
       "pages": [
-        "introduction",
-        {
-          "group": "Integrations",
-          "pages": [
-            "getting-started/how-to-integrate",
-            "getting-started/third-party"
-          ]
-        },
-        "getting-started/how-encryption-works",
-        "getting-started/how-latency-is-affected"
+        "getting-started/quick-start",
+        "getting-started/open-source",
+        "getting-started/latency-affect"
       ]
     },
     {
-      "group": "Custom Parameters",
-      "pages": [
-        "custom-parameters/overview",
-        "custom-parameters/user-tracking",
-        "custom-parameters/prompt-tracking"
-      ]
+      "group": "Features",
+      "pages": ["features/monitoring"]
     }
   ],
   "footerSocials": {
