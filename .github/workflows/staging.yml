@@ -1,0 +1,72 @@
+name: STAGING - Migration & Worker Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy-migrations:
+    runs-on: ubuntu-latest
+
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      PROJECT_ID: # project id goes here
+      ENV_NAME: staging
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - run: |
+          supabase link --project-ref # project id goes here
+          supabase db push
+
+  deploy-workers:
+    runs-on: ubuntu-latest
+    name: Deploy cloudflare workers
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18'
+      - name: Cache npm packages
+        uses: actions/cache@v2.1.7
+        with:
+          path: |
+            ./workers/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('./workers/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - name: Install dependencies
+        run: npm install --prefix ./worker
+      - name: Publish to staging
+        uses: cloudflare/wrangler-action@2.0.0
+        with:
+          command: publish --env staging
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          environment: 'staging'
+          workingDirectory: 'worker'
+          secrets: |
+            SUPABASE_URL
+            SUPABASE_SERVICE_ROLE_KEY
+            TOKENIZER_COUNT_API
+            TOKEN_COUNT_URL
+            CLICKHOUSE_HOST
+            CLICKHOUSE_USER
+            CLICKHOUSE_PASSWORD
+            TOKEN_CALC_URL
+        env:
+            SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+            SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
+            TOKENIZER_COUNT_API: ${{ secrets.STAGING_TOKENIZER_COUNT_API }}
+            TOKEN_COUNT_URL: ${{ secrets.STAGING_TOKEN_COUNT_URL }}
+            CLICKHOUSE_HOST: ${{ secrets.STAGING_CLICKHOUSE_HOST }}
+            CLICKHOUSE_USER: ${{ secrets.STAGING_CLICKHOUSE_USER }}
+            CLICKHOUSE_PASSWORD: ${{ secrets.STAGING_CLICKHOUSE_PASSWORD }}
+            TOKEN_CALC_URL: ${{ secrets.STAGING_TOKEN_CALC_URL }}
