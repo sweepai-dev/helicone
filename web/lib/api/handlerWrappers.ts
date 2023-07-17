@@ -124,10 +124,7 @@ export function withAuthSSR<T>(
     const { data, error } = await supabaseClient.getUserAndOrg();
     if (error !== null || !data.orgId || !data.userId) {
       return {
-        redirect: {
-          destination: "/",
-          permanent: false,
-        },
+        props: {},
       };
     } else {
       return await getServerSidePropsFunc({
