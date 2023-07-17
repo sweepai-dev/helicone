@@ -21,7 +21,7 @@ const Home = (props: HomeProps) => {
   const user = useUser();
   const supabase = createClientComponentClient();
   useEffect(() => {
-    if (!router) return;
+    if (!router || !user) return;
     if (user && user.email !== DEMO_EMAIL) {
       router.push("/dashboard");
     }
