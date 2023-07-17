@@ -20,11 +20,6 @@ const Home = (props: HomeProps) => {
 
   const user = useUser();
 
-  if (user && user.email !== DEMO_EMAIL) {
-    router.push("/dashboard");
-    return <LoadingAnimation title="Redirecting you to your dashboard..." />;
-  }
-
   return (
     <MetaData title="Home">
       <HomePage />
@@ -42,21 +37,6 @@ export const getServerSideProps = async (
     data: { session },
   } = await supabase.auth.getSession();
 
-  if (session) {
-    const { data, error } = await supabase
-      .from("user_settings")
-      .select("*")
-      .eq("user", session.user.id)
-      .single();
-    if (data === null) {
-      return {
-        redirect: {
-          destination: "/welcome",
-          permanent: false,
-        },
-      };
-    }
-  }
   return {
     props: {},
   };
