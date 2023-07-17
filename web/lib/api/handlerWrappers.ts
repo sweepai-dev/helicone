@@ -90,7 +90,7 @@ export function withAuth<T>(
     const { data, error } = await supabaseClient.getUserAndOrg();
     if (error !== null || !data.orgId || !data.userId) {
       res
-        .status(401)
+        .status(600)
         .json({ error: `Unauthorized, error: ${error}, data: ${data}` });
       return;
     }
