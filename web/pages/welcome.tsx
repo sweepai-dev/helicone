@@ -22,27 +22,3 @@ const Welcome = (props: WelcomeProps) => {
 };
 
 export default Welcome;
-
-export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
-  // Create authenticated Supabase Client
-  const supabase = new SupabaseServerWrapper(ctx).getClient();
-  // Check if we have a session
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session)
-    return {
-      redirect: {
-        destination: "/",
-        permanent: false,
-      },
-    };
-
-  return {
-    props: {
-      initialSession: session,
-      user: session.user,
-    },
-  };
-};

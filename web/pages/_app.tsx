@@ -30,8 +30,6 @@ export default function MyApp({
   initialSession: Session;
 }>) {
   const queryClient = new QueryClient();
-  // Create a new supabase browser client on every first render.
-  // const [supabaseClient] = useState(() => createBrowserSupabaseClient());
   const supabaseClient = createClientComponentClient();
 
   if (typeof window !== "undefined") {

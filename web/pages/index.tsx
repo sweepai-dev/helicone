@@ -11,19 +11,31 @@ import MetaData from "../components/shared/metaData";
 import HomePage from "../components/templates/home/homePage";
 import { DEMO_EMAIL } from "../lib/constants";
 import { SupabaseServerWrapper } from "../lib/wrappers/supabase";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 interface HomeProps {}
 
 const Home = (props: HomeProps) => {
-  const {} = props;
   const router = useRouter();
 
   const user = useUser();
-
-  if (user && user.email !== DEMO_EMAIL) {
-    router.push("/dashboard");
-    return <LoadingAnimation title="Redirecting you to your dashboard..." />;
-  }
+  const supabase = createClientComponentClient();
+  useEffect(() => {
+    if (!router) return;
+    if (user && user.email !== DEMO_EMAIL) {
+      router.push("/dashboard");
+    }
+    supabase
+      .from("user_settings")
+      .select("*")
+      .eq("user", user?.id)
+      .single()
+      .then(({ data }) => {
+        if (data === null) {
+          router.push("/welcome");
+        }
+      });
+  }, [router, supabase, user]);
 
   return (
     <MetaData title="Home">
@@ -33,31 +45,3 @@ const Home = (props: HomeProps) => {
 };
 
 export default Home;
-
-export const getServerSideProps = async (
-  context: GetServerSidePropsContext
-) => {
-  const supabase = new SupabaseServerWrapper(context).getClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (session) {
-    const { data, error } = await supabase
-      .from("user_settings")
-      .select("*")
-      .eq("user", session.user.id)
-      .single();
-    if (data === null) {
-      return {
-        redirect: {
-          destination: "/welcome",
-          permanent: false,
-        },
-      };
-    }
-  }
-  return {
-    props: {},
-  };
-};

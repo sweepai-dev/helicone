@@ -21,19 +21,27 @@ interface DashboardProps {
 }
 
 const Dashboard = (props: DashboardProps) => {
-  const { user } = props;
+  const user = useUser();
+  const router = useRouter();
 
   useEffect(() => {
-    if (!process.env.NEXT_PUBLIC_COMMAND_BAR_HELPHUB_0) return;
+    if (!router) return;
+    if (!process.env.NEXT_PUBLIC_COMMAND_BAR_HELPHUB_0 || !user?.id) return;
     if (typeof window !== "undefined") {
       init(process.env.NEXT_PUBLIC_COMMAND_BAR_HELPHUB_0 ?? "");
       window.CommandBar.boot(user.id);
     }
-
+    if (!user) {
+      router.push("/");
+    }
     return () => {
       window.CommandBar.shutdown();
     };
-  }, [user]);
+  }, [router, user]);
+
+  if (!user) {
+    return <MetaData title="Dashboard">Loading user...</MetaData>;
+  }
 
   return (
     <MetaData title="Dashboard">
@@ -45,16 +53,3 @@ const Dashboard = (props: DashboardProps) => {
 };
 
 export default Dashboard;
-
-export const getServerSideProps = withAuthSSR(async (options) => {
-  const {
-    userData: { user },
-    supabaseClient,
-  } = options;
-
-  return {
-    props: {
-      user,
-    },
-  };
-});
