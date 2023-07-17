@@ -123,6 +123,7 @@ export function withAuthSSR<T>(
     const supabaseClient = new SupabaseServerWrapper(context);
     const { data, error } = await supabaseClient.getUserAndOrg();
     if (error !== null || !data.orgId || !data.userId) {
+      console.log("ERROR", error, data);
       return {
         props: {},
       };
