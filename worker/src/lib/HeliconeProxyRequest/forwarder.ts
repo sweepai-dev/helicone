@@ -81,18 +81,7 @@ export async function proxyForwarder(
 
   if (cacheSettings.shouldSaveToCache) {
     ctx.waitUntil(
-      loggable
-        .waitForResponse()
-        .then((responseBody) =>
-          saveToCache(
-            proxyRequest,
-            response,
-            responseBody,
-            cacheSettings.cacheControl,
-            cacheSettings.bucketSettings,
-            env.CACHE_KV
-          )
-        )
+      saveToCache(proxyRequest, response, cacheSettings.cacheControl, cacheSettings.bucketSettings, env.CACHE_KV)
     );
   }
 
