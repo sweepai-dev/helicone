@@ -45,16 +45,3 @@ const Dashboard = (props: DashboardProps) => {
 };
 
 export default Dashboard;
-
-export const getServerSideProps = withAuthSSR(async (options) => {
-  const {
-    userData: { user },
-    supabaseClient,
-  } = options;
-
-  return {
-    props: {
-      user,
-    },
-  };
-});
