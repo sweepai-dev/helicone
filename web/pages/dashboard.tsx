@@ -51,6 +51,7 @@ export const getServerSideProps = withAuthSSR(async (options) => {
     userData: { user },
     supabaseClient,
   } = options;
+  console.log("USER IS THIS", user);
 
   return {
     props: {
