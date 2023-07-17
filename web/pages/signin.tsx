@@ -26,7 +26,6 @@ const SignIn = (props: SignInProps) => {
           return;
         }
         setNotification("Success. Redirecting...", "success");
-        router.push("/dashboard");
       }}
       handleGoogleSubmit={async () => {
         const { error } = await supabase.auth.signInWithOAuth({

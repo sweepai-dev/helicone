@@ -223,7 +223,6 @@ const Login = (props: LoginProps) => {
                               if (res.error) {
                                 setAuthError(res.error.message);
                               } else {
-                                router.push("/dashboard");
                               }
                               setLoading(false);
                             });
