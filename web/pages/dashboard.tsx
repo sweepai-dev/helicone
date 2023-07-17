@@ -22,6 +22,9 @@ interface DashboardProps {
 
 const Dashboard = (props: DashboardProps) => {
   const { user } = props;
+  console.log("USER", user);
+  const user2 = useUser();
+  console.log("USER2", user);
 
   useEffect(() => {
     if (!process.env.NEXT_PUBLIC_COMMAND_BAR_HELPHUB_0) return;
