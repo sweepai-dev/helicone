@@ -22,6 +22,8 @@ const Home = (props: HomeProps) => {
 
   return (
     <MetaData title="Home">
+      <div>USERID : {user?.id ?? "NO ID FOUND"}</div>
+      <div>EMAIL : {user?.email ?? "NO ID FOUND"}</div>
       <HomePage />
     </MetaData>
   );
