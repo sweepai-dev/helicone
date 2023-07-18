@@ -32,18 +32,6 @@ const OrgsPage = (props: OrgsPageProps) => {
             <p className="text-md font-semibold">Your Organizations</p>
             <button
               onClick={() => {
-                if (
-                  !(
-                    userSettings?.tier === "pro" ||
-                    userSettings?.tier === "enterprise"
-                  )
-                ) {
-                  setNotification(
-                    "You must be on a paid plan to create an organization.",
-                    "error"
-                  );
-                  return;
-                }
                 setCreateOpen(true);
               }}
               className="bg-gray-900 hover:bg-gray-700 whitespace-nowrap rounded-md px-4 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
