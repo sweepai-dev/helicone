@@ -102,3 +102,37 @@ test("custom properties", async () => {
     max_tokens: 10,
   });
 }, 60000);
+
+// Test rate limit handling
+test("rate limit handling", async () => {
+  const configuration = new Configuration({
+    apiKey,
+    heliconeApiKey,
+  });
+
+  const openai = new OpenAIApi(configuration);
+
+  // Mock the OpenAI API to return a 429 status code and a `x-ratelimit-reset-request` header with a specific value
+  jest.spyOn(openai, 'createCompletion').mockImplementation(() => {
+    return Promise.resolve({
+      status: 429,
+      headers: {
+        'x-ratelimit-reset-request': '10',
+      },
+    });
+  });
+
+  const startTime = Date.now();
+
+  // Make a request to the OpenAI API
+  await openai.createCompletion({
+    model: "text-ada-001",
+    prompt: "Rate limit handling test",
+    max_tokens: 10,
+  });
+
+  const endTime = Date.now();
+
+  // Check that the client waited for the specified amount of time before retrying the request
+  expect(endTime - startTime).toBeGreaterThanOrEqual(10000);
+}, 60000);
