@@ -119,24 +119,17 @@ export async function proxyForwarder(
   }
   ctx.waitUntil(log());
 
-  if (proxyRequest.rateLimitOptions) {
-    if (!proxyRequest.providerAuthHash) {
-      return new Response("Authorization header required for rate limiting", {
-        status: 401,
-      });
-    }
-    updateRateLimitCounter({
-      providerAuthHash: proxyRequest.providerAuthHash,
-      heliconeProperties: proxyRequest.requestWrapper.heliconeHeaders.heliconeProperties,
-      rateLimitKV: env.RATE_LIMIT_KV,
-      rateLimitOptions: proxyRequest.rateLimitOptions,
-      userId: proxyRequest.userId,
-    });
+  const isRateLimited = response.status === 429;
+  let rateLimitResetTime = 0;
+  if (isRateLimited) {
+    rateLimitResetTime = parseInt(response.headers.get('x-ratelimit-reset-request') || '0', 10);
   }
 
   return responseBuilder.build({
     body: response.body,
     inheritFrom: response,
     status: response.status,
+    isRateLimited,
+    rateLimitResetTime,
   });
 }
