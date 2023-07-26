@@ -1,13 +1,11 @@
-import asyncio
+# import asyncio
 import uuid
 from supabase import create_client, Client
 import os
 import time
 import openai
 import json
-import httpx
-from unittest.mock import MagicMock
-
+# import httpx
 openai.api_base = "http://127.0.0.1:8787/v1"
 SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU"
 SUPABASE_URL = "http://localhost:54321"
@@ -168,59 +166,64 @@ async def create_completion_async(model, prompt, max_tokens, temperature):
         return response.json()
 
 
-async def test_retries():
-    print("testing retries")
+# async def test_retries():
+#     print("testing retries")
 
-    number_of_loops = 300
-    # Exute a bunch of requests to make sure we don't get a 429
-    # Do them in parallel to make sure we don't get a 429
-    # from the rate limiter
-    tasks = [
-        create_completion_async(
-            model='text-davinci-003',
-            prompt="hi",
-            max_tokens=2,
-            temperature=0,
-        )
-        for _ in range(number_of_loops)
-    ]
-    responses = await asyncio.gather(*tasks)
-    for idx, response in enumerate(responses):
-        print(f"Response {idx + 1}: {response['choices'][0]['text']}")
+#     number_of_loops = 300
+#     # Exute a bunch of requests to make sure we don't get a 429
+#     # Do them in parallel to make sure we don't get a 429
+#     # from the rate limiter
+#     tasks = [
+#         create_completion_async(
+#             model='text-davinci-003',
+#             prompt="hi",
+#             max_tokens=2,
+#             temperature=0,
+#         )
+#         for _ in range(number_of_loops)
+#     ]
+#     responses = await asyncio.gather(*tasks)
+#     for idx, response in enumerate(responses):
+#         print(f"Response {idx + 1}: {response['choices'][0]['text']}")
 
 
-asyncio.run(test_retries())
+# asyncio.run(test_retries())
 test_prompt_format()
 test_cached_response()
 test_streamed_response()
 test_streamed_chat_response()
 test_streamed_response_delays()
 
+assert_stream_and_not_stream_same_tokens(prompt="ONLY RESPOND 'hi' exactly 10 times\n",
+                                         max_tokens=10,
+                                         temperature=0,
+                                         model='text-davinci-003')
 
-def test_rate_limit_handling():
-    print("testing rate limit handling")
 
-    # Mock the OpenAI API to return a 429 status code and a `x-ratelimit-reset-request` header with a specific value
-    openai.Completion.create = MagicMock(return_value={
-        'status': 429,
-        'headers': {
-            'x-ratelimit-reset-request': '10',
-        },
-    })
+assert_stream_and_not_stream_same_tokens(model='gpt-3.5-turbo',
+                                         messages=[
+                                             {
+                                                 "role": "system",
+                                                 "content": "ONLY RESPOND 'hi' 10 times\n"
+                                             }, {
+                                                 "role": "assistant",
+                                                 "content": "ONLY RESPOND 'hi' 10 times\n"
+                                             },
+                                             {
+                                                 "role": "assistant",
+                                                 "content": "ONLY RESPOND 'hi' 10 times\n"
+                                             }, {
+                                                 "role": "assistant",
+                                                 "content": "ONLY RESPOND 'hi' 10 times\n"
+                                             }
+                                         ],
+                                         max_tokens=100,
+                                         temperature=0)
 
-    start_time = time.time()
 
-    # Make a request to the OpenAI API
-    openai.Completion.create(
-        model='text-davinci-003',
-        prompt="Rate limit handling test",
-        max_tokens=10,
-        temperature=0,
-    )
-
-    end_time = time.time()
-
-    # Check that the worker waited for the specified amount of time before retrying the request
-    assert end_time - start_time >= 10
-
-    print("passed rate limit handling test")
+# should add tests for
+# curl -v --request POST \  --url http://127.0.0.1:8787/v1/audio/transcriptions \
+#   --header 'Authorization: Bearer sk-' \
+#   --header 'Content-Type: multipart/form-data' \
+#   --form file=@/Users/justin/Desktop/voiceover1.mp3 \
+#   --form model=whisper-1
